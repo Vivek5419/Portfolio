@@ -9,7 +9,6 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Vivek | YouTube Shorts Editor",
   description: "Professional YouTube Shorts editor showcasing editing skills and visual storytelling",
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -65,6 +64,11 @@ export default function RootLayout({
               background-color: rgba(10, 10, 10, 0.65) !important;
             }
           }
+          
+          /* Ensure video thumbnails are visible */
+          video {
+            background-color: #1a1a1a;
+          }
         `,
           }}
         />
@@ -94,14 +98,23 @@ export default function RootLayout({
                   element.style.opacity = '1';
                 }, 0);
               });
+              
+              // Ensure video thumbnails are visible
+              const videos = document.querySelectorAll('video');
+              videos.forEach(function(video) {
+                if (!video.poster || video.poster === "") {
+                  video.poster = "/placeholder.svg?height=720&width=405&text=Video";
+                }
+                video.preload = "none";
+                video.load();
+              });
             });
           `}
         </Script>
+
+        {/* Script to ensure thumbnails are visible */}
+        <Script src="/ensure-thumbnails.js" strategy="beforeInteractive" />
       </body>
     </html>
   )
 }
-
-
-
-import './globals.css'
