@@ -11,6 +11,8 @@ interface VideoWithFallbackProps {
   autoPlay?: boolean
   loop?: boolean
   controls?: boolean
+  onPlay?: () => void
+  onPause?: () => void
 }
 
 export default function VideoWithFallback({
@@ -21,11 +23,22 @@ export default function VideoWithFallback({
   autoPlay = false,
   loop = false,
   controls = false,
+  onPlay,
+  onPause,
 }: VideoWithFallbackProps) {
   const [error, setError] = useState(false)
 
   const handleError = () => {
+    console.error(`Error loading video: ${src}`)
     setError(true)
+  }
+
+  const handlePlay = () => {
+    if (onPlay) onPlay()
+  }
+
+  const handlePause = () => {
+    if (onPause) onPause()
   }
 
   if (error) {
@@ -49,6 +62,8 @@ export default function VideoWithFallback({
       controls={controls}
       playsInline
       onError={handleError}
+      onPlay={handlePlay}
+      onPause={handlePause}
     >
       <source src={src} type="video/mp4" />
       Your browser does not support the video tag.
