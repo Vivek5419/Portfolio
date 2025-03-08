@@ -1,45 +1,53 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Play, Pause, Volume2, VolumeX } from "lucide-react"
 import { motion, useScroll, useTransform } from "framer-motion"
 
 export default function VideoShowcase() {
-  // Track state for each video
-  const [videoStates, setVideoStates] = useState([
-    { isPlaying: false, isMuted: false },
+  // Track state for each video separately
+  const [mainVideoState, setMainVideoState] = useState({
+    isPlaying: false,
+    isMuted: false,
+  })
+
+  // Separate state for thumbnail videos
+  const [thumbnailStates, setThumbnailStates] = useState([
     { isPlaying: false, isMuted: false },
     { isPlaying: false, isMuted: false },
     { isPlaying: false, isMuted: false },
   ])
 
-  const [activeVideo, setActiveVideo] = useState(0)
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0)
   const sectionRef = useRef<HTMLElement>(null)
-  const videoRefs = useRef<(HTMLVideoElement | null)[]>([null, null, null, null])
+  const mainVideoRef = useRef<HTMLVideoElement>(null)
+  const thumbnailRefs = useRef<(HTMLVideoElement | null)[]>([null, null, null])
 
   // Define your videos here
   const videos = [
     {
-      id: 1,
+      id: 0,
       title: "Main Showcase",
       src: "/videos/main-showcase.mp4",
       poster: "/placeholder.svg?height=720&width=405&text=Main+Video",
     },
     {
-      id: 2,
+      id: 1,
       title: "Short Sample 1",
       src: "/videos/short-sample-1.mp4",
       poster: "/placeholder.svg?height=720&width=405&text=Short+1",
     },
     {
-      id: 3,
+      id: 2,
       title: "Short Sample 2",
       src: "/videos/short-sample-2.mp4",
       poster: "/placeholder.svg?height=720&width=405&text=Short+2",
     },
     {
-      id: 4,
+      id: 3,
       title: "Short Sample 3",
       src: "/videos/short-sample-3.mp4",
       poster: "/placeholder.svg?height=720&width=405&text=Short+3",
@@ -48,18 +56,15 @@ export default function VideoShowcase() {
 
   // Load video metadata on component mount
   useEffect(() => {
-    // Preload video metadata
-    videoRefs.current.forEach((videoRef, index) => {
+    // Set initial muted state for main video
+    if (mainVideoRef.current) {
+      mainVideoRef.current.muted = mainVideoState.isMuted
+    }
+
+    // Set initial muted state for thumbnail videos
+    thumbnailRefs.current.forEach((videoRef, index) => {
       if (videoRef) {
-        videoRef.preload = "metadata"
-
-        // Set initial muted state (false = sound enabled)
-        videoRef.muted = videoStates[index].isMuted
-
-        // Load poster immediately
-        if (videoRef.poster === "") {
-          videoRef.poster = videos[index < videos.length ? index : 0].poster
-        }
+        videoRef.muted = thumbnailStates[index].isMuted
       }
     })
   }, [])
@@ -72,96 +77,92 @@ export default function VideoShowcase() {
   const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0])
   const y = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [100, 0, 0, -100])
 
-  // Toggle play/pause for any video
-  const togglePlay = (index: number) => {
-    const videoRef = videoRefs.current[index]
-    if (!videoRef) return
+  // Main video controls
+  const toggleMainPlay = (e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent event bubbling
 
-    const newVideoStates = [...videoStates]
+    if (!mainVideoRef.current) return
 
-    if (videoRef.paused) {
-      // Pause all other videos first
-      videoRefs.current.forEach((ref, i) => {
-        if (i !== index && ref && !ref.paused) {
-          ref.pause()
-          newVideoStates[i] = { ...newVideoStates[i], isPlaying: false }
-        }
-      })
-
-      // Play this video
-      videoRef
+    if (mainVideoRef.current.paused) {
+      mainVideoRef.current
         .play()
         .then(() => {
-          newVideoStates[index] = { ...newVideoStates[index], isPlaying: true }
-          setVideoStates(newVideoStates)
+          setMainVideoState((prev) => ({ ...prev, isPlaying: true }))
         })
         .catch((err) => {
-          console.error("Error playing video:", err)
+          console.error("Error playing main video:", err)
         })
     } else {
-      videoRef.pause()
-      newVideoStates[index] = { ...newVideoStates[index], isPlaying: false }
-      setVideoStates(newVideoStates)
+      mainVideoRef.current.pause()
+      setMainVideoState((prev) => ({ ...prev, isPlaying: false }))
     }
   }
 
-  // Toggle mute for any video
-  const toggleMute = (index: number) => {
-    const videoRef = videoRefs.current[index]
+  const toggleMainMute = (e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent event bubbling
+
+    if (!mainVideoRef.current) return
+
+    mainVideoRef.current.muted = !mainVideoRef.current.muted
+    setMainVideoState((prev) => ({ ...prev, isMuted: mainVideoRef.current!.muted }))
+  }
+
+  // Thumbnail video controls
+  const toggleThumbnailPlay = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent event bubbling
+
+    const videoRef = thumbnailRefs.current[index]
     if (!videoRef) return
 
-    const newVideoStates = [...videoStates]
+    if (videoRef.paused) {
+      videoRef
+        .play()
+        .then(() => {
+          setThumbnailStates((prev) => {
+            const newStates = [...prev]
+            newStates[index] = { ...newStates[index], isPlaying: true }
+            return newStates
+          })
+        })
+        .catch((err) => {
+          console.error(`Error playing thumbnail video ${index}:`, err)
+        })
+    } else {
+      videoRef.pause()
+      setThumbnailStates((prev) => {
+        const newStates = [...prev]
+        newStates[index] = { ...newStates[index], isPlaying: false }
+        return newStates
+      })
+    }
+  }
+
+  const toggleThumbnailMute = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent event bubbling
+
+    const videoRef = thumbnailRefs.current[index]
+    if (!videoRef) return
+
     videoRef.muted = !videoRef.muted
-    newVideoStates[index] = { ...newVideoStates[index], isMuted: videoRef.muted }
-    setVideoStates(newVideoStates)
+    setThumbnailStates((prev) => {
+      const newStates = [...prev]
+      newStates[index] = { ...newStates[index], isMuted: videoRef.muted }
+      return newStates
+    })
   }
 
   // Change the main video
   const changeMainVideo = (index: number) => {
-    // First pause the current main video
-    const currentMainVideo = videoRefs.current[activeVideo]
-    if (currentMainVideo && !currentMainVideo.paused) {
-      currentMainVideo.pause()
+    // Update the source of the main video
+    if (mainVideoRef.current) {
+      // Pause the current main video
+      mainVideoRef.current.pause()
+      setMainVideoState((prev) => ({ ...prev, isPlaying: false }))
 
-      const newVideoStates = [...videoStates]
-      newVideoStates[activeVideo] = { ...newVideoStates[activeVideo], isPlaying: false }
-      setVideoStates(newVideoStates)
+      // Set the new video source
+      setActiveVideoIndex(index + 1) // +1 because thumbnails start at index 1
     }
-
-    // Set the new active video
-    setActiveVideo(index)
-
-    // Copy the muted state from the thumbnail to the main video
-    setTimeout(() => {
-      const mainVideoRef = videoRefs.current[activeVideo]
-      const thumbnailVideoRef = videoRefs.current[index]
-
-      if (mainVideoRef && thumbnailVideoRef) {
-        mainVideoRef.muted = thumbnailVideoRef.muted
-
-        const newVideoStates = [...videoStates]
-        newVideoStates[activeVideo] = {
-          ...newVideoStates[activeVideo],
-          isMuted: thumbnailVideoRef.muted,
-        }
-        setVideoStates(newVideoStates)
-      }
-    }, 50)
   }
-
-  // Video controls component for reuse
-  const VideoControls = ({ index }: { index: number }) => (
-    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" size="icon" onClick={() => togglePlay(index)} className="text-white hover:bg-white/20">
-          {videoStates[index].isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
-        </Button>
-        <Button variant="ghost" size="icon" onClick={() => toggleMute(index)} className="text-white hover:bg-white/20">
-          {videoStates[index].isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
-        </Button>
-      </div>
-    </div>
-  )
 
   return (
     <section id="showcase" ref={sectionRef} className="py-20 overflow-hidden">
@@ -188,100 +189,138 @@ export default function VideoShowcase() {
               <div className="p-0 relative">
                 <div className="aspect-[9/16] w-full max-w-[405px] mx-auto">
                   <video
-                    ref={(el) => (videoRefs.current[activeVideo] = el)}
+                    ref={mainVideoRef}
                     className="w-full h-full object-cover"
-                    poster={videos[activeVideo].poster}
-                    muted={videoStates[activeVideo].isMuted}
+                    poster={videos[activeVideoIndex].poster}
+                    muted={mainVideoState.isMuted}
                     playsInline
                     preload="auto"
-                    onPlay={() => {
-                      const newVideoStates = [...videoStates]
-                      newVideoStates[activeVideo] = { ...newVideoStates[activeVideo], isPlaying: true }
-                      setVideoStates(newVideoStates)
-                    }}
-                    onPause={() => {
-                      const newVideoStates = [...videoStates]
-                      newVideoStates[activeVideo] = { ...newVideoStates[activeVideo], isPlaying: false }
-                      setVideoStates(newVideoStates)
-                    }}
+                    onPlay={() => setMainVideoState((prev) => ({ ...prev, isPlaying: true }))}
+                    onPause={() => setMainVideoState((prev) => ({ ...prev, isPlaying: false }))}
                   >
-                    <source src={videos[activeVideo].src} type="video/mp4" />
+                    <source src={videos[activeVideoIndex].src} type="video/mp4" />
                     Your browser does not support the video tag.
                   </video>
                 </div>
-                <VideoControls index={activeVideo} />
+
+                {/* Main video controls */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={toggleMainPlay}
+                      className="text-white hover:bg-white/20"
+                    >
+                      {mainVideoState.isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={toggleMainMute}
+                      className="text-white hover:bg-white/20"
+                    >
+                      {mainVideoState.isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-            {videos.slice(1, 4).map((video, index) => {
-              const videoIndex = index + 1 // Actual index in the videos array
+            {videos.slice(1, 4).map((video, index) => (
+              <motion.div
+                key={video.id}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{
+                  opacity: 1,
+                  y: 0,
+                  transition: {
+                    duration: 0.8,
+                    delay: 0.1 * index,
+                    ease: [0.22, 1, 0.36, 1],
+                  },
+                }}
+                viewport={{ once: true }}
+                whileHover={{
+                  scale: 1.05,
+                  transition: { duration: 0.3 },
+                }}
+                style={{ isolation: "isolate" }}
+                className="cursor-pointer"
+                onClick={() => changeMainVideo(index)}
+              >
+                <div className="apple-blur rounded-3xl border border-zinc-800/30 overflow-hidden apple-glow">
+                  <div className="p-0">
+                    <div className="relative aspect-[9/16] bg-zinc-800">
+                      <video
+                        ref={(el) => (thumbnailRefs.current[index] = el)}
+                        className="w-full h-full object-cover"
+                        src={video.src}
+                        poster={video.poster}
+                        muted={thumbnailStates[index].isMuted}
+                        playsInline
+                        preload="auto"
+                        onPlay={() => {
+                          setThumbnailStates((prev) => {
+                            const newStates = [...prev]
+                            newStates[index] = { ...newStates[index], isPlaying: true }
+                            return newStates
+                          })
+                        }}
+                        onPause={() => {
+                          setThumbnailStates((prev) => {
+                            const newStates = [...prev]
+                            newStates[index] = { ...newStates[index], isPlaying: false }
+                            return newStates
+                          })
+                        }}
+                      >
+                        <source src={video.src} type="video/mp4" />
+                      </video>
 
-              return (
-                <motion.div
-                  key={video.id}
-                  initial={{ opacity: 0, y: 50 }}
-                  whileInView={{
-                    opacity: 1,
-                    y: 0,
-                    transition: {
-                      duration: 0.8,
-                      delay: 0.1 * index,
-                      ease: [0.22, 1, 0.36, 1],
-                    },
-                  }}
-                  viewport={{ once: true }}
-                  whileHover={{
-                    scale: 1.05,
-                    transition: { duration: 0.3 },
-                  }}
-                  style={{ isolation: "isolate" }}
-                  className="cursor-pointer"
-                >
-                  <div className="apple-blur rounded-3xl border border-zinc-800/30 overflow-hidden apple-glow">
-                    <div className="p-0">
-                      <div className="relative aspect-[9/16] bg-zinc-800">
-                        <video
-                          ref={(el) => (videoRefs.current[videoIndex] = el)}
-                          className="w-full h-full object-cover"
-                          src={video.src}
-                          poster={video.poster}
-                          muted={videoStates[videoIndex].isMuted}
-                          playsInline
-                          preload="auto"
-                          onPlay={() => {
-                            const newVideoStates = [...videoStates]
-                            newVideoStates[videoIndex] = { ...newVideoStates[videoIndex], isPlaying: true }
-                            setVideoStates(newVideoStates)
-                          }}
-                          onPause={() => {
-                            const newVideoStates = [...videoStates]
-                            newVideoStates[videoIndex] = { ...newVideoStates[videoIndex], isPlaying: false }
-                            setVideoStates(newVideoStates)
-                          }}
-                        >
-                          <source src={video.src} type="video/mp4" />
-                        </video>
+                      {/* Thumbnail video controls */}
+                      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent z-20">
+                        <div className="flex items-center justify-between">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => toggleThumbnailPlay(index, e)}
+                            className="text-white hover:bg-white/20"
+                          >
+                            {thumbnailStates[index].isPlaying ? (
+                              <Pause className="h-6 w-6" />
+                            ) : (
+                              <Play className="h-6 w-6" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => toggleThumbnailMute(index, e)}
+                            className="text-white hover:bg-white/20"
+                          >
+                            {thumbnailStates[index].isMuted ? (
+                              <VolumeX className="h-6 w-6" />
+                            ) : (
+                              <Volume2 className="h-6 w-6" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
 
-                        {/* Add the same controls to thumbnail videos */}
-                        <VideoControls index={videoIndex} />
-
-                        {/* Add a play button overlay that changes the main video */}
-                        <div
-                          className="absolute inset-0 flex items-center justify-center z-10"
-                          onClick={() => changeMainVideo(videoIndex)}
-                        >
-                          <div className="bg-black/30 rounded-full p-3 hover:bg-black/50 transition-colors">
-                            <Play className="h-8 w-8 text-white" />
-                          </div>
+                      {/* Add a play button overlay that changes the main video */}
+                      <div className="absolute inset-0 flex items-center justify-center z-10">
+                        <div className="bg-black/30 rounded-full p-3 hover:bg-black/50 transition-colors">
+                          <Play className="h-8 w-8 text-white" />
                         </div>
                       </div>
                     </div>
                   </div>
-                </motion.div>
-              )
-            })}
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </motion.div>
@@ -289,4 +328,3 @@ export default function VideoShowcase() {
   )
 }
 
-          
