@@ -26,7 +26,7 @@ export default function VideoShowcase() {
   const mainVideoRef = useRef<HTMLVideoElement>(null)
   const thumbnailRefs = useRef<(HTMLVideoElement | null)[]>([null, null, null])
 
-  // Define your videos here
+  // Define your videos here with better default poster images
   const videos = [
     {
       id: 0,
@@ -59,12 +59,16 @@ export default function VideoShowcase() {
     // Set initial muted state for main video
     if (mainVideoRef.current) {
       mainVideoRef.current.muted = mainVideoState.isMuted
+      // Force poster to be visible
+      mainVideoRef.current.load()
     }
 
     // Set initial muted state for thumbnail videos
     thumbnailRefs.current.forEach((videoRef, index) => {
       if (videoRef) {
         videoRef.muted = thumbnailStates[index].isMuted
+        // Force poster to be visible
+        videoRef.load()
       }
     })
   }, [])
@@ -77,6 +81,27 @@ export default function VideoShowcase() {
   const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0])
   const y = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [100, 0, 0, -100])
 
+  // Function to pause all videos
+  const pauseAllVideos = () => {
+    // Pause main video
+    if (mainVideoRef.current && !mainVideoRef.current.paused) {
+      mainVideoRef.current.pause()
+      setMainVideoState((prev) => ({ ...prev, isPlaying: false }))
+    }
+
+    // Pause all thumbnail videos
+    thumbnailRefs.current.forEach((videoRef, index) => {
+      if (videoRef && !videoRef.paused) {
+        videoRef.pause()
+        setThumbnailStates((prev) => {
+          const newStates = [...prev]
+          newStates[index] = { ...newStates[index], isPlaying: false }
+          return newStates
+        })
+      }
+    })
+  }
+
   // Main video controls
   const toggleMainPlay = (e: React.MouseEvent) => {
     e.stopPropagation() // Prevent event bubbling
@@ -84,6 +109,10 @@ export default function VideoShowcase() {
     if (!mainVideoRef.current) return
 
     if (mainVideoRef.current.paused) {
+      // Pause all other videos first
+      pauseAllVideos()
+
+      // Then play this video
       mainVideoRef.current
         .play()
         .then(() => {
@@ -115,6 +144,10 @@ export default function VideoShowcase() {
     if (!videoRef) return
 
     if (videoRef.paused) {
+      // Pause all other videos first
+      pauseAllVideos()
+
+      // Then play this video
       videoRef
         .play()
         .then(() => {
@@ -153,12 +186,11 @@ export default function VideoShowcase() {
 
   // Change the main video
   const changeMainVideo = (index: number) => {
+    // Pause all videos first
+    pauseAllVideos()
+
     // Update the source of the main video
     if (mainVideoRef.current) {
-      // Pause the current main video
-      mainVideoRef.current.pause()
-      setMainVideoState((prev) => ({ ...prev, isPlaying: false }))
-
       // Set the new video source
       setActiveVideoIndex(index + 1) // +1 because thumbnails start at index 1
     }
@@ -194,8 +226,22 @@ export default function VideoShowcase() {
                     poster={videos[activeVideoIndex].poster}
                     muted={mainVideoState.isMuted}
                     playsInline
-                    preload="auto"
-                    onPlay={() => setMainVideoState((prev) => ({ ...prev, isPlaying: true }))}
+                    preload="metadata"
+                    onPlay={() => {
+                      // Pause all other videos when this one plays
+                      thumbnailRefs.current.forEach((videoRef, index) => {
+                        if (videoRef && !videoRef.paused) {
+                          videoRef.pause()
+                          setThumbnailStates((prev) => {
+                            const newStates = [...prev]
+                            newStates[index] = { ...newStates[index], isPlaying: false }
+                            return newStates
+                          })
+                        }
+                      })
+
+                      setMainVideoState((prev) => ({ ...prev, isPlaying: true }))
+                    }}
                     onPause={() => setMainVideoState((prev) => ({ ...prev, isPlaying: false }))}
                   >
                     <source src={videos[activeVideoIndex].src} type="video/mp4" />
@@ -261,8 +307,26 @@ export default function VideoShowcase() {
                         poster={video.poster}
                         muted={thumbnailStates[index].isMuted}
                         playsInline
-                        preload="auto"
+                        preload="metadata"
                         onPlay={() => {
+                          // Pause main video when this one plays
+                          if (mainVideoRef.current && !mainVideoRef.current.paused) {
+                            mainVideoRef.current.pause()
+                            setMainVideoState((prev) => ({ ...prev, isPlaying: false }))
+                          }
+
+                          // Pause other thumbnail videos
+                          thumbnailRefs.current.forEach((videoRef, i) => {
+                            if (i !== index && videoRef && !videoRef.paused) {
+                              videoRef.pause()
+                              setThumbnailStates((prev) => {
+                                const newStates = [...prev]
+                                newStates[i] = { ...newStates[i], isPlaying: false }
+                                return newStates
+                              })
+                            }
+                          })
+
                           setThumbnailStates((prev) => {
                             const newStates = [...prev]
                             newStates[index] = { ...newStates[index], isPlaying: true }
@@ -310,12 +374,7 @@ export default function VideoShowcase() {
                         </div>
                       </div>
 
-                      {/* Add a play button overlay that changes the main video */}
-                      <div className="absolute inset-0 flex items-center justify-center z-10">
-                        <div className="bg-black/30 rounded-full p-3 hover:bg-black/50 transition-colors">
-                          <Play className="h-8 w-8 text-white" />
-                        </div>
-                      </div>
+                      {/* Removed the play button overlay in the middle */}
                     </div>
                   </div>
                 </div>
