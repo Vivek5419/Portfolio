@@ -328,3 +328,49 @@ button {
   backface-visibility: hidden;
 }
 
+/* Add this to your existing CSS to ensure blur effects are properly applied */
+.apple-blur,
+.apple-blur-light,
+.apple-blur-heavy,
+.menu-backdrop {
+  background-color: rgba(18, 18, 18, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+  -webkit-backdrop-filter: blur(35px) !important;
+  backdrop-filter: blur(35px) !important;
+  transform: translateZ(0);
+  will-change: transform, backdrop-filter;
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure the timeline is easy to interact with on touch devices */
+.video-timeline {
+  height: 8px !important; /* Slightly taller for easier touch */
+  transition: height 0.2s ease;
+}
+
+.video-timeline:hover,
+.video-timeline:active {
+  height: 10px !important; /* Even taller when interacting */
+}
+
+/* Ensure the "All these videos are edited by me" text has proper blur */
+.edited-by-me-text {
+  position: relative;
+  z-index: 1;
+}
+
+/* Add this to your existing CSS to ensure the "All these videos are edited by me" section has proper blur */
+.edited-by-me-container {
+  background-color: rgba(18, 18, 18, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+  -webkit-backdrop-filter: blur(35px) !important;
+  backdrop-filter: blur(35px) !important;
+  transform: translateZ(0);
+  will-change: transform, backdrop-filter;
+  position: relative;
+  z-index: 1;
+}
+
