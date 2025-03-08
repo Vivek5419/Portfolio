@@ -12,13 +12,15 @@ export default function VideoShowcase() {
   const [mainVideoState, setMainVideoState] = useState({
     isPlaying: false,
     isMuted: false,
+    currentTime: 0,
+    duration: 0,
   })
 
   // Separate state for thumbnail videos
   const [thumbnailStates, setThumbnailStates] = useState([
-    { isPlaying: false, isMuted: false },
-    { isPlaying: false, isMuted: false },
-    { isPlaying: false, isMuted: false },
+    { isPlaying: false, isMuted: false, currentTime: 0, duration: 0 },
+    { isPlaying: false, isMuted: false, currentTime: 0, duration: 0 },
+    { isPlaying: false, isMuted: false, currentTime: 0, duration: 0 },
   ])
 
   const [activeVideoIndex, setActiveVideoIndex] = useState(0)
@@ -26,7 +28,10 @@ export default function VideoShowcase() {
   const mainVideoRef = useRef<HTMLVideoElement>(null)
   const thumbnailRefs = useRef<(HTMLVideoElement | null)[]>([null, null, null])
 
-  // Define your videos here with better default poster images
+  // Timer ref for updating progress
+  const progressTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Define your videos here with explicit poster images
   const videos = [
     {
       id: 0,
@@ -53,6 +58,47 @@ export default function VideoShowcase() {
       poster: "/placeholder.svg?height=720&width=405&text=Short+3",
     },
   ]
+
+  // Function to update video progress
+  const updateVideoProgress = () => {
+    // Update main video progress
+    if (mainVideoRef.current) {
+      setMainVideoState((prev) => ({
+        ...prev,
+        currentTime: mainVideoRef.current!.currentTime,
+        duration: mainVideoRef.current!.duration || 0,
+      }))
+    }
+
+    // Update thumbnail videos progress
+    thumbnailRefs.current.forEach((videoRef, index) => {
+      if (videoRef) {
+        setThumbnailStates((prev) => {
+          const newStates = [...prev]
+          newStates[index] = {
+            ...newStates[index],
+            currentTime: videoRef.currentTime,
+            duration: videoRef.duration || 0,
+          }
+          return newStates
+        })
+      }
+    })
+
+    // Schedule next update
+    progressTimerRef.current = setTimeout(updateVideoProgress, 250)
+  }
+
+  // Start progress updates
+  useEffect(() => {
+    progressTimerRef.current = setTimeout(updateVideoProgress, 250)
+
+    return () => {
+      if (progressTimerRef.current) {
+        clearTimeout(progressTimerRef.current)
+      }
+    }
+  }, [])
 
   // Load video metadata on component mount
   useEffect(() => {
@@ -196,6 +242,50 @@ export default function VideoShowcase() {
     }
   }
 
+  // Video timeline component
+  const VideoTimeline = ({
+    currentTime,
+    duration,
+    className = "",
+  }: { currentTime: number; duration: number; className?: string }) => {
+    const progress = duration > 0 ? (currentTime / duration) * 100 : 0
+
+    return (
+      <div className={`w-full h-1 bg-gray-700 rounded-full overflow-hidden ${className}`}>
+        <div className="h-full bg-white rounded-full" style={{ width: `${progress}%` }} />
+      </div>
+    )
+  }
+
+  // Video controls component with timeline
+  const VideoControls = ({
+    isPlaying,
+    isMuted,
+    currentTime,
+    duration,
+    onPlayPause,
+    onMuteToggle,
+  }: {
+    isPlaying: boolean
+    isMuted: boolean
+    currentTime: number
+    duration: number
+    onPlayPause: (e: React.MouseEvent) => void
+    onMuteToggle: (e: React.MouseEvent) => void
+  }) => (
+    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
+      <VideoTimeline currentTime={currentTime} duration={duration} className="mb-2" />
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" size="icon" onClick={onPlayPause} className="text-white hover:bg-white/20">
+          {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+        </Button>
+        <Button variant="ghost" size="icon" onClick={onMuteToggle} className="text-white hover:bg-white/20">
+          {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+        </Button>
+      </div>
+    </div>
+  )
+
   return (
     <section id="showcase" ref={sectionRef} className="py-20 overflow-hidden">
       <motion.div className="container px-4 md:px-6" style={{ opacity, y }}>
@@ -226,7 +316,7 @@ export default function VideoShowcase() {
                     poster={videos[activeVideoIndex].poster}
                     muted={mainVideoState.isMuted}
                     playsInline
-                    preload="metadata"
+                    preload="auto"
                     onPlay={() => {
                       // Pause all other videos when this one plays
                       thumbnailRefs.current.forEach((videoRef, index) => {
@@ -243,33 +333,38 @@ export default function VideoShowcase() {
                       setMainVideoState((prev) => ({ ...prev, isPlaying: true }))
                     }}
                     onPause={() => setMainVideoState((prev) => ({ ...prev, isPlaying: false }))}
+                    onTimeUpdate={() => {
+                      if (mainVideoRef.current) {
+                        setMainVideoState((prev) => ({
+                          ...prev,
+                          currentTime: mainVideoRef.current!.currentTime,
+                          duration: mainVideoRef.current!.duration || 0,
+                        }))
+                      }
+                    }}
+                    onLoadedMetadata={() => {
+                      if (mainVideoRef.current) {
+                        setMainVideoState((prev) => ({
+                          ...prev,
+                          duration: mainVideoRef.current!.duration || 0,
+                        }))
+                      }
+                    }}
                   >
                     <source src={videos[activeVideoIndex].src} type="video/mp4" />
                     Your browser does not support the video tag.
                   </video>
                 </div>
 
-                {/* Main video controls */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-                  <div className="flex items-center justify-between">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={toggleMainPlay}
-                      className="text-white hover:bg-white/20"
-                    >
-                      {mainVideoState.isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={toggleMainMute}
-                      className="text-white hover:bg-white/20"
-                    >
-                      {mainVideoState.isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
-                    </Button>
-                  </div>
-                </div>
+                {/* Main video controls with timeline */}
+                <VideoControls
+                  isPlaying={mainVideoState.isPlaying}
+                  isMuted={mainVideoState.isMuted}
+                  currentTime={mainVideoState.currentTime}
+                  duration={mainVideoState.duration}
+                  onPlayPause={toggleMainPlay}
+                  onMuteToggle={toggleMainMute}
+                />
               </div>
             </div>
           </motion.div>
@@ -307,7 +402,7 @@ export default function VideoShowcase() {
                         poster={video.poster}
                         muted={thumbnailStates[index].isMuted}
                         playsInline
-                        preload="metadata"
+                        preload="auto"
                         onPlay={() => {
                           // Pause main video when this one plays
                           if (mainVideoRef.current && !mainVideoRef.current.paused) {
@@ -340,50 +435,69 @@ export default function VideoShowcase() {
                             return newStates
                           })
                         }}
+                        onTimeUpdate={() => {
+                          const videoRef = thumbnailRefs.current[index]
+                          if (videoRef) {
+                            setThumbnailStates((prev) => {
+                              const newStates = [...prev]
+                              newStates[index] = {
+                                ...newStates[index],
+                                currentTime: videoRef.currentTime,
+                                duration: videoRef.duration || 0,
+                              }
+                              return newStates
+                            })
+                          }
+                        }}
+                        onLoadedMetadata={() => {
+                          const videoRef = thumbnailRefs.current[index]
+                          if (videoRef) {
+                            setThumbnailStates((prev) => {
+                              const newStates = [...prev]
+                              newStates[index] = {
+                                ...newStates[index],
+                                duration: videoRef.duration || 0,
+                              }
+                              return newStates
+                            })
+                          }
+                        }}
                       >
                         <source src={video.src} type="video/mp4" />
                       </video>
 
-                      {/* Thumbnail video controls */}
-                      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent z-20">
-                        <div className="flex items-center justify-between">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => toggleThumbnailPlay(index, e)}
-                            className="text-white hover:bg-white/20"
-                          >
-                            {thumbnailStates[index].isPlaying ? (
-                              <Pause className="h-6 w-6" />
-                            ) : (
-                              <Play className="h-6 w-6" />
-                            )}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => toggleThumbnailMute(index, e)}
-                            className="text-white hover:bg-white/20"
-                          >
-                            {thumbnailStates[index].isMuted ? (
-                              <VolumeX className="h-6 w-6" />
-                            ) : (
-                              <Volume2 className="h-6 w-6" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Removed the play button overlay in the middle */}
+                      {/* Thumbnail video controls with timeline */}
+                      <VideoControls
+                        isPlaying={thumbnailStates[index].isPlaying}
+                        isMuted={thumbnailStates[index].isMuted}
+                        currentTime={thumbnailStates[index].currentTime}
+                        duration={thumbnailStates[index].duration}
+                        onPlayPause={(e) => toggleThumbnailPlay(index, e)}
+                        onMuteToggle={(e) => toggleThumbnailMute(index, e)}
+                      />
                     </div>
                   </div>
                 </div>
               </motion.div>
             ))}
           </div>
+
+          {/* New section stating videos are edited by me */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            viewport={{ once: true }}
+            className="mt-8 text-center"
+          >
+            <div className="apple-blur-light rounded-3xl border border-zinc-800/30 overflow-hidden p-4 apple-glow">
+              <p className="text-lg text-gray-300">All these videos are edited by me</p>
+            </div>
+          </motion.div>
         </div>
       </motion.div>
     </section>
   )
 }
 
+                              
