@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Play, Pause, Volume2, VolumeX } from "lucide-react"
 import { motion, useScroll, useTransform } from "framer-motion"
@@ -11,6 +11,7 @@ export default function VideoShowcase() {
   const [activeVideo, setActiveVideo] = useState(0)
   const sectionRef = useRef<HTMLElement>(null)
   const mainVideoRef = useRef<HTMLVideoElement>(null)
+  const thumbnailRefs = useRef<(HTMLVideoElement | null)[]>([null, null, null])
 
   // Define your videos here
   const videos = [
@@ -39,6 +40,29 @@ export default function VideoShowcase() {
       poster: "/placeholder.svg?height=720&width=405&text=Short+3",
     },
   ]
+
+  // Check if videos exist in the public folder and use fallbacks if needed
+  useEffect(() => {
+    // Function to check if a video exists
+    const checkVideoExists = async (src: string) => {
+      try {
+        const response = await fetch(src, { method: "HEAD" })
+        return response.ok
+      } catch (error) {
+        return false
+      }
+    }
+
+    // Check main video
+    if (mainVideoRef.current) {
+      checkVideoExists(videos[activeVideo].src).then((exists) => {
+        if (!exists && mainVideoRef.current) {
+          // If video doesn't exist, use a fallback
+          mainVideoRef.current.src = "/placeholder.svg?height=720&width=405&text=Video+Not+Found"
+        }
+      })
+    }
+  }, [activeVideo, videos])
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -83,6 +107,19 @@ export default function VideoShowcase() {
     }, 50)
   }
 
+  // Function to play thumbnail video on hover
+  const handleThumbnailHover = (index: number, isHovering: boolean) => {
+    const videoRef = thumbnailRefs.current[index]
+    if (!videoRef) return
+
+    if (isHovering) {
+      videoRef.play().catch((err) => console.log("Autoplay prevented:", err))
+    } else {
+      videoRef.pause()
+      videoRef.currentTime = 0
+    }
+  }
+
   return (
     <section id="showcase" ref={sectionRef} className="py-20 overflow-hidden">
       <motion.div className="container px-4 md:px-6" style={{ opacity, y }}>
@@ -106,16 +143,20 @@ export default function VideoShowcase() {
           >
             <div className="apple-blur-heavy rounded-3xl border border-zinc-800/30 overflow-hidden apple-glow">
               <div className="p-0 relative">
-                <video
-                  ref={mainVideoRef}
-                  className="w-full aspect-[9/16] md:aspect-video object-cover"
-                  poster={videos[activeVideo].poster}
-                  muted={isMuted}
-                  playsInline
-                >
-                  <source src={videos[activeVideo].src} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
+                {/* Changed aspect ratio to 9:16 for desktop as well */}
+                <div className="aspect-[9/16] w-full max-w-[405px] mx-auto">
+                  <video
+                    ref={mainVideoRef}
+                    className="w-full h-full object-cover"
+                    poster={videos[activeVideo].poster}
+                    muted={isMuted}
+                    playsInline
+                    preload="metadata"
+                  >
+                    <source src={videos[activeVideo].src} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
                   <div className="flex items-center justify-between">
                     <Button variant="ghost" size="icon" onClick={togglePlay} className="text-white hover:bg-white/20">
@@ -151,15 +192,23 @@ export default function VideoShowcase() {
                 }}
                 style={{ isolation: "isolate" }}
                 onClick={() => changeVideo(index + 1)}
+                onMouseEnter={() => handleThumbnailHover(index, true)}
+                onMouseLeave={() => handleThumbnailHover(index, false)}
                 className="cursor-pointer"
               >
                 <div className="apple-blur rounded-3xl border border-zinc-800/30 overflow-hidden apple-glow">
                   <div className="p-0">
                     <div className="relative aspect-[9/16] bg-zinc-800">
-                      <img
-                        src={video.poster || "/placeholder.svg"}
-                        alt={video.title}
+                      {/* Added actual video elements for thumbnails */}
+                      <video
+                        ref={(el) => (thumbnailRefs.current[index] = el)}
+                        src={video.src}
+                        poster={video.poster}
                         className="w-full h-full object-cover"
+                        muted
+                        playsInline
+                        loop
+                        preload="metadata"
                       />
                       <motion.div
                         className="absolute inset-0 flex items-center justify-center"
@@ -181,4 +230,3 @@ export default function VideoShowcase() {
     </section>
   )
 }
-
