@@ -1,0 +1,330 @@
+html,
+body {
+  /*touch-action: pan-x pan-y;
+-webkit-touch-callout: none;
+-webkit-user-select: none;
+user-select: none;
+overscroll-behavior: none;*/
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  background-color: transparent;
+  /*touch-action: manipulation; Allow normal touch but prevent double-tap zoom*/
+  overscroll-behavior: none;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .card {
+    transition: all 500ms ease-in-out;
+  }
+
+  .card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400;
+  }
+
+  .bg-gradient-overlay {
+    @apply bg-gradient-to-br from-indigo-500/[0.05] via-transparent to-rose-500/[0.05];
+  }
+}
+
+/* Add smooth transitions for all interactive elements */
+a,
+button {
+  transition: all 300ms ease-in-out;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background: linear-gradient(270deg, #ff0000, #00ff00, #0000ff);
+  background-size: 600% 600%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient 10s ease infinite;
+}
+
+/* Add this to your existing CSS */
+@media (max-width: 640px) {
+  .menu-container {
+    width: 90%;
+    max-width: 360px;
+  }
+
+  .menu-container button {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Menu container styles */
+.menu-container {
+  width: fit-content;
+  max-width: 90%;
+}
+
+/* Fix button padding to ensure borders stay within container */
+.menu-button {
+  border: none !important;
+  background: transparent !important;
+  transition: background-color 0.2s ease-in-out !important;
+}
+
+.menu-button:active,
+.menu-button:focus {
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: none !important;
+}
+
+/* Add these styles to ensure consistent button widths */
+.hero-button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 24rem;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .hero-button-container {
+    flex-direction: row;
+  }
+}
+
+.hero-button {
+  width: 100%;
+}
+
+/* Make sure the animated background covers the entire page */
+.animated-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -10;
+  background-color: #030303;
+}
+
+/* Add a subtle overlay to ensure content remains readable */
+.section-overlay {
+  position: relative;
+  z-index: 1;
+}
+
+.section-overlay::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+}
+
+/* Enhanced Apple-style blur effects - MORE TRANSPARENT */
+.apple-blur {
+  background-color: rgba(18, 18, 18, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+  -webkit-backdrop-filter: blur(35px) !important;
+  backdrop-filter: blur(35px) !important;
+  transform: translateZ(0);
+  will-change: transform, backdrop-filter;
+}
+
+.apple-blur-light {
+  background-color: rgba(18, 18, 18, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1) !important;
+  -webkit-backdrop-filter: blur(25px) !important;
+  backdrop-filter: blur(25px) !important;
+  transform: translateZ(0);
+  will-change: transform, backdrop-filter;
+}
+
+.apple-blur-heavy {
+  background-color: rgba(18, 18, 18, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2) !important;
+  -webkit-backdrop-filter: blur(45px) !important;
+  backdrop-filter: blur(45px) !important;
+  transform: translateZ(0);
+  will-change: transform, backdrop-filter;
+}
+
+/* Update the menu container styles for better blur */
+.menu-container .menu-backdrop {
+  background-color: rgba(10, 10, 10, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+  -webkit-backdrop-filter: blur(40px) !important;
+  backdrop-filter: blur(40px) !important;
+  transform: translateZ(0);
+  will-change: transform, backdrop-filter;
+}
+
+/* Add styles for pre-animation blur state */
+.pre-animation-blur {
+  opacity: 0;
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  background-color: rgba(18, 18, 18, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transform: translateY(20px);
+  transition: all 0.5s ease-out;
+}
+
+/* Add this to ensure blur is applied to elements before they animate into view */
+.skill-card-container,
+.main-video-container,
+.thumbnail-container,
+.pricing-card-container,
+.contact-card-container,
+.inquiry-card-container {
+  will-change: opacity, transform;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* Ensure blur is applied even when elements are hidden */
+.skill-card-container [class*="apple-blur"],
+.main-video-container [class*="apple-blur"],
+.thumbnail-container [class*="apple-blur"],
+.pricing-card-container [class*="apple-blur"],
+.contact-card-container [class*="apple-blur"],
+.inquiry-card-container [class*="apple-blur"] {
+  will-change: backdrop-filter;
+  transform: translateZ(0);
+}
+
+/* Add this new class for enhanced glow effects */
+.apple-glow {
+  position: relative;
+}
+
+.apple-glow::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+  -webkit-mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Add this to ensure blur is applied to elements before they animate into view */
+.pre-animation-container {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Ensure blur is applied even when elements are hidden or during animation */
+.pre-animation-container [class*="apple-blur"] {
+  -webkit-backdrop-filter: blur(35px) !important;
+  backdrop-filter: blur(35px) !important;
+  will-change: transform, backdrop-filter;
+  transform: translateZ(0);
+}
+
+/* Force hardware acceleration for all animated elements */
+.motion-element {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+

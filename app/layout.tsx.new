@@ -1,0 +1,74 @@
+import type React from "react"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+import Script from "next/script"
+
+const inter = Inter({ subsets: ["latin"] })
+
+export const metadata: Metadata = {
+  title: "Vivek | YouTube Shorts Editor",
+  description: "Professional YouTube Shorts editor showcasing editing skills and visual storytelling",
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en" className="dark">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta name="theme-color" content="#000000" />
+        {/* Force blur effects to be applied across all browsers */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+          .apple-blur, .apple-blur-light, .apple-blur-heavy, .menu-backdrop {
+            -webkit-backdrop-filter: blur(25px) !important;
+            backdrop-filter: blur(25px) !important;
+          }
+          
+          /* Ensure blur is applied even before animation */
+          .pre-animation-container {
+            position: relative;
+            isolation: isolate;
+          }
+          
+          /* Force hardware acceleration */
+          .motion-element {
+            transform: translateZ(0);
+            will-change: transform, opacity;
+            backface-visibility: hidden;
+          }
+        `,
+          }}
+        />
+      </head>
+      <body className={inter.className}>
+        {children}
+
+        {/* Simple script to prevent zoom only */}
+        <Script id="prevent-zoom" strategy="afterInteractive">
+          {`
+            document.addEventListener('touchstart', function(e) {
+              if (e.touches.length > 1) {
+                e.preventDefault();
+              }
+            }, { passive: false });
+            
+            // Force repaint to ensure blur effects are applied
+            document.addEventListener('DOMContentLoaded', function() {
+              document.body.style.transform = 'translateZ(0)';
+              setTimeout(function() {
+                document.body.style.transform = '';
+              }, 0);
+            });
+          `}
+        </Script>
+      </body>
+    </html>
+  )
+}
+
