@@ -25,4 +25,3 @@
   // Run again after a short delay to catch dynamically added videos
   setTimeout(ensureThumbnails, 500)
 })()
-
