@@ -15,6 +15,7 @@ interface VideoTimelineProps {
 export default function VideoTimeline({ currentTime, duration, onSeek, className }: VideoTimelineProps) {
   const timelineRef = useRef<HTMLDivElement>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [isHovering, setIsHovering] = useState(false)
   const [hoverPosition, setHoverPosition] = useState<number | null>(null)
 
   // Format time as MM:SS
@@ -24,13 +25,18 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
     return `${minutes}:${seconds.toString().padStart(2, "0")}`
   }
 
+  // Calculate time for hover preview
+  const getTimeForPosition = (position: number) => {
+    return Math.max(0, Math.min(position * duration, duration))
+  }
+
   // Handle mouse/touch events
   const handleInteraction = (clientX: number) => {
     if (!timelineRef.current) return
 
     const rect = timelineRef.current.getBoundingClientRect()
     const position = (clientX - rect.left) / rect.width
-    const newTime = Math.max(0, Math.min(position * duration, duration))
+    const newTime = getTimeForPosition(position)
     onSeek(newTime)
   }
 
@@ -57,18 +63,22 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
 
   const handleMouseLeave = () => {
     setHoverPosition(null)
-    if (isDragging) {
-      setIsDragging(false)
-    }
+    setIsHovering(false)
+  }
+
+  const handleMouseEnter = () => {
+    setIsHovering(true)
   }
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault() // Prevent scrolling while touching the timeline
     setIsDragging(true)
     handleInteraction(e.touches[0].clientX)
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (isDragging) {
+      e.preventDefault() // Prevent scrolling while dragging
       handleInteraction(e.touches[0].clientX)
     }
   }
@@ -79,18 +89,26 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
 
   // Add/remove document-level event listeners
   useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      setIsDragging(false)
+    }
+
+    const handleGlobalTouchEnd = () => {
+      setIsDragging(false)
+    }
+
     if (isDragging) {
-      document.addEventListener("mouseup", handleMouseUp)
-      document.addEventListener("touchend", handleTouchEnd)
+      document.addEventListener("mouseup", handleGlobalMouseUp)
+      document.addEventListener("touchend", handleGlobalTouchEnd)
     }
 
     return () => {
-      document.removeEventListener("mouseup", handleMouseUp)
-      document.removeEventListener("touchend", handleTouchEnd)
+      document.removeEventListener("mouseup", handleGlobalMouseUp)
+      document.removeEventListener("touchend", handleGlobalTouchEnd)
     }
   }, [isDragging])
 
-  const progress = (currentTime / duration) * 100
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0
 
   return (
     <div className={cn("relative select-none", className)}>
@@ -102,23 +120,32 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
       {/* Timeline container */}
       <div
         ref={timelineRef}
-        className="group relative h-1 bg-white/20 rounded-full overflow-hidden cursor-pointer touch-none"
+        className={cn(
+          "group relative h-1 bg-white/20 rounded-full overflow-hidden cursor-pointer touch-none",
+          isDragging && "h-2",
+          isHovering && "h-2",
+        )}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        onMouseEnter={handleMouseEnter}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Progress bar */}
         <div
-          className="absolute inset-0 bg-red-600 rounded-full origin-left transition-transform duration-100 ease-out group-hover:bg-red-500"
+          className={cn(
+            "absolute inset-0 bg-red-600 rounded-full origin-left",
+            (isHovering || isDragging) && "bg-red-500",
+          )}
           style={{ transform: `scaleX(${progress / 100})` }}
         />
 
         {/* Hover preview */}
         {hoverPosition !== null && (
           <div
-            className="absolute top-0 left-0 h-full w-1 bg-white/50"
+            className="absolute top-0 left-0 h-full w-0.5 bg-white/50"
             style={{ transform: `translateX(${hoverPosition * 100}%)` }}
           />
         )}
@@ -126,14 +153,22 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
         {/* Scrubber handle */}
         <div
           className={cn(
-            "absolute top-1/2 w-3 h-3 -ml-1.5 bg-red-600 rounded-full -translate-y-1/2",
-            "transition-transform duration-150",
-            "group-hover:scale-150",
-            isDragging && "scale-150",
+            "absolute top-1/2 -ml-1.5 w-3 h-3 bg-red-600 rounded-full -translate-y-1/2",
+            (isHovering || isDragging) && "scale-150 bg-red-500",
           )}
           style={{ left: `${progress}%` }}
         />
       </div>
+
+      {/* Preview time tooltip */}
+      {hoverPosition !== null && (
+        <div
+          className="absolute -top-10 px-2 py-1 bg-black/90 rounded text-xs text-white transform -translate-x-1/2 pointer-events-none"
+          style={{ left: `${hoverPosition * 100}%` }}
+        >
+          {formatTime(getTimeForPosition(hoverPosition))}
+        </div>
+      )}
     </div>
   )
 }
