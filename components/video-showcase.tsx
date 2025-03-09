@@ -242,115 +242,34 @@ export default function VideoShowcase() {
     }
   }
 
-  // Seek function for main video
-  const seekMainVideo = (time: number) => {
+  // Handle timeline click for main video
+  const handleMainTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!mainVideoRef.current) return
 
-    try {
-      mainVideoRef.current.currentTime = time
-      setMainVideoState((prev) => ({
-        ...prev,
-        currentTime: time,
-      }))
-    } catch (error) {
-      console.error("Error seeking main video:", error)
+    const rect = e.currentTarget.getBoundingClientRect()
+    const clickPosition = (e.clientX - rect.left) / rect.width
+    const newTime = clickPosition * mainVideoState.duration
+
+    if (newTime >= 0 && newTime <= mainVideoState.duration) {
+      mainVideoRef.current.currentTime = newTime
     }
   }
 
-  // Seek function for thumbnail videos
-  const seekThumbnailVideo = (index: number, time: number) => {
+  // Handle timeline click for thumbnail videos
+  const handleThumbnailTimelineClick = (index: number, e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation() // Prevent triggering the parent onClick
+
     const videoRef = thumbnailRefs.current[index]
     if (!videoRef) return
 
-    try {
-      videoRef.currentTime = time
-      setThumbnailStates((prev) => {
-        const newStates = [...prev]
-        newStates[index] = {
-          ...newStates[index],
-          currentTime: time,
-        }
-        return newStates
-      })
-    } catch (error) {
-      console.error(`Error seeking thumbnail video ${index}:`, error)
+    const rect = e.currentTarget.getBoundingClientRect()
+    const clickPosition = (e.clientX - rect.left) / rect.width
+    const newTime = clickPosition * thumbnailStates[index].duration
+
+    if (newTime >= 0 && newTime <= thumbnailStates[index].duration) {
+      videoRef.currentTime = newTime
     }
   }
-
-  // Video timeline component with proper touch/click handling
-  const VideoTimeline = ({
-    currentTime,
-    duration,
-    className = "",
-    onSeek,
-  }: {
-    currentTime: number
-    duration: number
-    className?: string
-    onSeek: (time: number) => void
-  }) => {
-    const timelineRef = useRef<HTMLDivElement>(null)
-    const progress = duration > 0 ? (currentTime / duration) * 100 : 0
-
-    const handleSeek = (e: React.MouseEvent | React.TouchEvent) => {
-      e.stopPropagation()
-      if (!timelineRef.current || duration <= 0) return
-
-      const rect = timelineRef.current.getBoundingClientRect()
-      const clientX = "touches" in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX
-
-      const position = (clientX - rect.left) / rect.width
-      const seekTime = Math.max(0, Math.min(position * duration, duration))
-      onSeek(seekTime)
-    }
-
-    return (
-      <div
-        ref={timelineRef}
-        className={`w-full h-2 bg-gray-700 rounded-full overflow-hidden cursor-pointer ${className}`}
-        onClick={handleSeek}
-        onTouchStart={handleSeek}
-        role="slider"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={progress}
-        tabIndex={0}
-      >
-        <div className="h-full bg-white rounded-full transition-all duration-100" style={{ width: `${progress}%` }} />
-      </div>
-    )
-  }
-
-  // Video controls component with timeline
-  const VideoControls = ({
-    isPlaying,
-    isMuted,
-    currentTime,
-    duration,
-    onPlayPause,
-    onMuteToggle,
-    onSeek,
-  }: {
-    isPlaying: boolean
-    isMuted: boolean
-    currentTime: number
-    duration: number
-    onPlayPause: (e: React.MouseEvent) => void
-    onMuteToggle: (e: React.MouseEvent) => void
-    onSeek: (time: number) => void
-  }) => (
-    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-      <VideoTimeline currentTime={currentTime} duration={duration} className="mb-2" onSeek={onSeek} />
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" size="icon" onClick={onPlayPause} className="text-white hover:bg-white/20">
-          {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
-        </Button>
-        <Button variant="ghost" size="icon" onClick={onMuteToggle} className="text-white hover:bg-white/20">
-          {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
-        </Button>
-      </div>
-    </div>
-  )
 
   return (
     <section id="showcase" ref={sectionRef} className="py-20 overflow-hidden">
@@ -422,16 +341,47 @@ export default function VideoShowcase() {
                   </video>
                 </div>
 
-                {/* Main video controls with timeline */}
-                <VideoControls
-                  isPlaying={mainVideoState.isPlaying}
-                  isMuted={mainVideoState.isMuted}
-                  currentTime={mainVideoState.currentTime}
-                  duration={mainVideoState.duration}
-                  onPlayPause={toggleMainPlay}
-                  onMuteToggle={toggleMainMute}
-                  onSeek={seekMainVideo}
-                />
+                {/* Main video controls with interactive timeline */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
+                  {/* Interactive timeline */}
+                  <div className="video-timeline-container" onClick={handleMainTimelineClick}>
+                    <div
+                      className="video-timeline-progress"
+                      style={{
+                        width: `${
+                          mainVideoState.duration > 0 ? (mainVideoState.currentTime / mainVideoState.duration) * 100 : 0
+                        }%`,
+                      }}
+                    />
+                    <div
+                      className="video-timeline-handle"
+                      style={{
+                        left: `${
+                          mainVideoState.duration > 0 ? (mainVideoState.currentTime / mainVideoState.duration) * 100 : 0
+                        }%`,
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={toggleMainPlay}
+                      className="text-white hover:bg-white/20"
+                    >
+                      {mainVideoState.isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={toggleMainMute}
+                      className="text-white hover:bg-white/20"
+                    >
+                      {mainVideoState.isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -533,33 +483,49 @@ export default function VideoShowcase() {
                         <source src={video.src} type="video/mp4" />
                       </video>
 
-                      {/* Thumbnail video controls with timeline */}
-                      <VideoControls
-                        isPlaying={thumbnailStates[index].isPlaying}
-                        isMuted={thumbnailStates[index].isMuted}
-                        currentTime={thumbnailStates[index].currentTime}
-                        duration={thumbnailStates[index].duration}
-                        onPlayPause={(e) => toggleThumbnailPlay(index, e)}
-                        onMuteToggle={(e) => toggleThumbnailMute(index, e)}
-                        onSeek={(time) => seekThumbnailVideo(index, time)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                      {/* Thumbnail video controls with interactive timeline */}
+                      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
+                        {/* Interactive timeline */}
+                        <div
+                          className="video-timeline-container"
+                          onClick={(e) => handleThumbnailTimelineClick(index, e)}
+                        >
+                          <div
+                            className="video-timeline-progress"
+                            style={{
+                              width: `${
+                                thumbnailStates[index].duration > 0
+                                  ? (thumbnailStates[index].currentTime / thumbnailStates[index].duration) * 100
+                                  : 0
+                              }%`,
+                            }}
+                          />
+                          <div
+                            className="video-timeline-handle"
+                            style={{
+                              left: `${
+                                thumbnailStates[index].duration > 0
+                                  ? (thumbnailStates[index].currentTime / thumbnailStates[index].duration) * 100
+                                  : 0
+                              }%`,
+                            }}
+                          />
+                        </div>
 
-          {/* New section stating videos are edited by me */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            viewport={{ once: true }}
-            className="mt-8 text-center"
-            style={{ isolation: "isolate" }}
-          >
-            <div className="apple-blur rounded-3xl border border-zinc-800/30 overflow-hidden p-4">
-              <p className="text-lg text-gray-300">All these videos are edited by me</p>
-            </div>
-          
+                        <div className="flex items-center justify-between">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => toggleThumbnailPlay(index, e)}
+                            className="text-white hover:bg-white/20"
+                          >
+                            {thumbnailStates[index].isPlaying ? (
+                              <Pause className="h-6 w-6" />
+                            ) : (
+                              <Play className="h-6 w-6" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+    
