@@ -242,9 +242,42 @@ export default function VideoShowcase() {
     }
   }
 
-  // Update the VideoTimeline component to make it interactive
-  // Replace the existing VideoTimeline component with this updated version:
+  // Seek function for main video
+  const seekMainVideo = (time: number) => {
+    if (!mainVideoRef.current) return
 
+    try {
+      mainVideoRef.current.currentTime = time
+      setMainVideoState((prev) => ({
+        ...prev,
+        currentTime: time,
+      }))
+    } catch (error) {
+      console.error("Error seeking main video:", error)
+    }
+  }
+
+  // Seek function for thumbnail videos
+  const seekThumbnailVideo = (index: number, time: number) => {
+    const videoRef = thumbnailRefs.current[index]
+    if (!videoRef) return
+
+    try {
+      videoRef.currentTime = time
+      setThumbnailStates((prev) => {
+        const newStates = [...prev]
+        newStates[index] = {
+          ...newStates[index],
+          currentTime: time,
+        }
+        return newStates
+      })
+    } catch (error) {
+      console.error(`Error seeking thumbnail video ${index}:`, error)
+    }
+  }
+
+  // Video timeline component with proper touch/click handling
   const VideoTimeline = ({
     currentTime,
     duration,
@@ -256,35 +289,39 @@ export default function VideoShowcase() {
     className?: string
     onSeek: (time: number) => void
   }) => {
-    const progress = duration > 0 ? (currentTime / duration) * 100 : 0
     const timelineRef = useRef<HTMLDivElement>(null)
+    const progress = duration > 0 ? (currentTime / duration) * 100 : 0
 
-    const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!timelineRef.current) return
+    const handleSeek = (e: React.MouseEvent | React.TouchEvent) => {
+      e.stopPropagation()
+      if (!timelineRef.current || duration <= 0) return
 
       const rect = timelineRef.current.getBoundingClientRect()
-      const clickPosition = (e.clientX - rect.left) / rect.width
-      const newTime = clickPosition * duration
+      const clientX = "touches" in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX
 
-      if (newTime >= 0 && newTime <= duration) {
-        onSeek(newTime)
-      }
+      const position = (clientX - rect.left) / rect.width
+      const seekTime = Math.max(0, Math.min(position * duration, duration))
+      onSeek(seekTime)
     }
 
     return (
       <div
         ref={timelineRef}
         className={`w-full h-2 bg-gray-700 rounded-full overflow-hidden cursor-pointer ${className}`}
-        onClick={handleTimelineClick}
+        onClick={handleSeek}
+        onTouchStart={handleSeek}
+        role="slider"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={progress}
+        tabIndex={0}
       >
-        <div className="h-full bg-white rounded-full" style={{ width: `${progress}%` }} />
+        <div className="h-full bg-white rounded-full transition-all duration-100" style={{ width: `${progress}%` }} />
       </div>
     )
   }
 
-  // Update the VideoControls component to pass the onSeek function
-  // Replace the existing VideoControls component with this updated version:
-
+  // Video controls component with timeline
   const VideoControls = ({
     isPlaying,
     isMuted,
@@ -314,81 +351,6 @@ export default function VideoShowcase() {
       </div>
     </div>
   )
-
-  // Add the seek function for the main video
-  // Add this function before the return statement:
-
-  const seekMainVideo = (time: number) => {
-    if (mainVideoRef.current) {
-      mainVideoRef.current.currentTime = time
-      setMainVideoState((prev) => ({
-        ...prev,
-        currentTime: time,
-      }))
-    }
-  }
-
-  // Add the seek function for thumbnail videos
-  // Add this function before the return statement:
-
-  const seekThumbnailVideo = (index: number, time: number) => {
-    const videoRef = thumbnailRefs.current[index]
-    if (videoRef) {
-      videoRef.currentTime = time
-      setThumbnailStates((prev) => {
-        const newStates = [...prev]
-        newStates[index] = {
-          ...newStates[index],
-          currentTime: time,
-        }
-        return newStates
-      })
-    }
-  }
-
-  // Video timeline component
-  // const VideoTimeline = ({
-  //   currentTime,
-  //   duration,
-  //   className = "",
-  // }: { currentTime: number; duration: number; className?: string }) => {
-  //   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
-
-  //   return (
-  //     <div className={`w-full h-1 bg-gray-700 rounded-full overflow-hidden ${className}`}>
-  //       <div className="h-full bg-white rounded-full" style={{ width: `${progress}%` }} />
-  //     </div>
-  //   )
-  // }
-
-  // Video controls component with timeline
-  // const VideoControls = ({
-  //   isPlaying,
-  //   isMuted,
-  //   currentTime,
-  //   duration,
-  //   onPlayPause,
-  //   onMuteToggle,
-  // }: {
-  //   isPlaying: boolean
-  //   isMuted: boolean
-  //   currentTime: number
-  //   duration: number
-  //   onPlayPause: (e: React.MouseEvent) => void
-  //   onMuteToggle: (e: React.MouseEvent) => void
-  // }) => (
-  //   <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-  //     <VideoTimeline currentTime={currentTime} duration={duration} className="mb-2" />
-  //     <div className="flex items-center justify-between">
-  //       <Button variant="ghost" size="icon" onClick={onPlayPause} className="text-white hover:bg-white/20">
-  //         {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
-  //       </Button>
-  //       <Button variant="ghost" size="icon" onClick={onMuteToggle} className="text-white hover:bg-white/20">
-  //         {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
-  //       </Button>
-  //     </div>
-  //   </div>
-  // )
 
   return (
     <section id="showcase" ref={sectionRef} className="py-20 overflow-hidden">
@@ -566,4 +528,38 @@ export default function VideoShowcase() {
                               return newStates
                             })
                           }
-                     
+                        }}
+                      >
+                        <source src={video.src} type="video/mp4" />
+                      </video>
+
+                      {/* Thumbnail video controls with timeline */}
+                      <VideoControls
+                        isPlaying={thumbnailStates[index].isPlaying}
+                        isMuted={thumbnailStates[index].isMuted}
+                        currentTime={thumbnailStates[index].currentTime}
+                        duration={thumbnailStates[index].duration}
+                        onPlayPause={(e) => toggleThumbnailPlay(index, e)}
+                        onMuteToggle={(e) => toggleThumbnailMute(index, e)}
+                        onSeek={(time) => seekThumbnailVideo(index, time)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* New section stating videos are edited by me */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            viewport={{ once: true }}
+            className="mt-8 text-center"
+            style={{ isolation: "isolate" }}
+          >
+            <div className="apple-blur rounded-3xl border border-zinc-800/30 overflow-hidden p-4">
+              <p className="text-lg text-gray-300">All these videos are edited by me</p>
+            </div>
+          
