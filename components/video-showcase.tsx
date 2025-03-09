@@ -8,6 +8,45 @@ import { Play, Pause, Volume2, VolumeX } from "lucide-react"
 import { motion, useScroll, useTransform } from "framer-motion"
 import VideoTimeline from "./video-timeline"
 
+// Video controls component with timeline
+const VideoControls = ({
+  isPlaying,
+  isMuted,
+  currentTime,
+  duration,
+  onPlayPause,
+  onMuteToggle,
+  onSeek,
+  overlayTracks,
+}: {
+  isPlaying: boolean
+  isMuted: boolean
+  currentTime: number
+  duration: number
+  onPlayPause: (e: React.MouseEvent) => void
+  onMuteToggle: (e: React.MouseEvent) => void
+  onSeek: (time: number) => void
+  overlayTracks?: { startTime: number; endTime: number; type: "pip" | "overlay" | "text"; label?: string }[]
+}) => (
+  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
+    <VideoTimeline
+      currentTime={currentTime}
+      duration={duration}
+      onSeek={onSeek}
+      className="mb-2"
+      overlayTracks={overlayTracks}
+    />
+    <div className="flex items-center justify-between">
+      <Button variant="ghost" size="icon" onClick={onPlayPause} className="text-white hover:bg-white/20">
+        {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+      </Button>
+      <Button variant="ghost" size="icon" onClick={onMuteToggle} className="text-white hover:bg-white/20">
+        {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+      </Button>
+    </div>
+  </div>
+)
+
 export default function VideoShowcase() {
   // Track state for each video separately
   const [mainVideoState, setMainVideoState] = useState({
@@ -58,6 +97,31 @@ export default function VideoShowcase() {
       src: "/videos/short-sample-3.mp4",
       poster: "/placeholder.svg?height=720&width=405&text=Short+3",
     },
+  ]
+
+  // Sample overlay tracks for each video
+  const videoOverlayTracks = [
+    // Main video overlays
+    [
+      { startTime: 5, endTime: 15, type: "pip" as const, label: "Reaction PiP" },
+      { startTime: 20, endTime: 35, type: "overlay" as const, label: "Effect" },
+      { startTime: 10, endTime: 40, type: "text" as const, label: "Subtitles" },
+    ],
+    // Thumbnail 1 overlays
+    [
+      { startTime: 2, endTime: 8, type: "pip" as const },
+      { startTime: 12, endTime: 18, type: "text" as const },
+    ],
+    // Thumbnail 2 overlays
+    [
+      { startTime: 3, endTime: 10, type: "overlay" as const },
+      { startTime: 5, endTime: 15, type: "text" as const },
+    ],
+    // Thumbnail 3 overlays
+    [
+      { startTime: 1, endTime: 7, type: "pip" as const },
+      { startTime: 9, endTime: 14, type: "overlay" as const },
+    ],
   ]
 
   // Function to update video progress
@@ -258,37 +322,6 @@ export default function VideoShowcase() {
   //   )
   // }
 
-  // Video controls component with timeline
-  const VideoControls = ({
-    isPlaying,
-    isMuted,
-    currentTime,
-    duration,
-    onPlayPause,
-    onMuteToggle,
-    onSeek,
-  }: {
-    isPlaying: boolean
-    isMuted: boolean
-    currentTime: number
-    duration: number
-    onPlayPause: (e: React.MouseEvent) => void
-    onMuteToggle: (e: React.MouseEvent) => void
-    onSeek: (time: number) => void
-  }) => (
-    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-      <VideoTimeline currentTime={currentTime} duration={duration} onSeek={onSeek} className="mb-2" />
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" size="icon" onClick={onPlayPause} className="text-white hover:bg-white/20">
-          {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
-        </Button>
-        <Button variant="ghost" size="icon" onClick={onMuteToggle} className="text-white hover:bg-white/20">
-          {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
-        </Button>
-      </div>
-    </div>
-  )
-
   return (
     <section id="showcase" ref={sectionRef} className="py-20 overflow-hidden">
       <motion.div className="container px-4 md:px-6" style={{ opacity, y }}>
@@ -367,6 +400,7 @@ export default function VideoShowcase() {
                   duration={mainVideoState.duration}
                   onPlayPause={toggleMainPlay}
                   onMuteToggle={toggleMainMute}
+                  overlayTracks={videoOverlayTracks[activeVideoIndex]}
                   onSeek={(time) => {
                     if (mainVideoRef.current) {
                       mainVideoRef.current.currentTime = time
@@ -482,6 +516,7 @@ export default function VideoShowcase() {
                         duration={thumbnailStates[index].duration}
                         onPlayPause={(e) => toggleThumbnailPlay(index, e)}
                         onMuteToggle={(e) => toggleThumbnailMute(index, e)}
+                        overlayTracks={videoOverlayTracks[index + 1]} // +1 because thumbnails start at index 1
                         onSeek={(time) => {
                           const videoRef = thumbnailRefs.current[index]
                           if (videoRef) {
@@ -514,3 +549,4 @@ export default function VideoShowcase() {
   )
 }
 
+      
