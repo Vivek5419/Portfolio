@@ -6,75 +6,48 @@ import { useRef, useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 
 interface VideoTimelineProps {
-  /**
-   * Current time in seconds
-   */
   currentTime: number
-  /**
-   * Total duration in seconds
-   */
   duration: number
-  /**
-   * Array of markers/chapters to display on timeline
-   */
-  markers?: {
-    time: number
-    label: string
-  }[]
-  /**
-   * Callback when timeline is scrubbed
-   */
-  onSeek?: (time: number) => void
-  /**
-   * Optional CSS class names
-   */
+  onSeek: (time: number) => void
   className?: string
 }
 
-export function VideoTimeline({ currentTime, duration, markers = [], onSeek, className }: VideoTimelineProps) {
+export default function VideoTimeline({ currentTime, duration, onSeek, className }: VideoTimelineProps) {
   const timelineRef = useRef<HTMLDivElement>(null)
   const [isDragging, setIsDragging] = useState(false)
-  const [hoverTime, setHoverTime] = useState<number | null>(null)
+  const [hoverPosition, setHoverPosition] = useState<number | null>(null)
 
   // Format time as MM:SS
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = Math.floor(seconds % 60)
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60)
+    const seconds = Math.floor(time % 60)
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`
   }
 
-  // Calculate progress percentage
-  const progress = (currentTime / duration) * 100
-
-  // Handle timeline click/touch
-  const handleTimelineInteraction = (clientX: number) => {
+  // Handle mouse/touch events
+  const handleInteraction = (clientX: number) => {
     if (!timelineRef.current) return
 
     const rect = timelineRef.current.getBoundingClientRect()
     const position = (clientX - rect.left) / rect.width
     const newTime = Math.max(0, Math.min(position * duration, duration))
-
-    if (onSeek) {
-      onSeek(newTime)
-    }
+    onSeek(newTime)
   }
 
-  // Mouse/Touch event handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true)
-    handleTimelineInteraction(e.clientX)
+    handleInteraction(e.clientX)
   }
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!timelineRef.current) return
+    const rect = timelineRef.current?.getBoundingClientRect()
+    if (!rect) return
 
-    const rect = timelineRef.current.getBoundingClientRect()
     const position = (e.clientX - rect.left) / rect.width
-    const hoverTimeValue = Math.max(0, Math.min(position * duration, duration))
-    setHoverTime(hoverTimeValue)
+    setHoverPosition(position)
 
     if (isDragging) {
-      handleTimelineInteraction(e.clientX)
+      handleInteraction(e.clientX)
     }
   }
 
@@ -83,21 +56,20 @@ export function VideoTimeline({ currentTime, duration, markers = [], onSeek, cla
   }
 
   const handleMouseLeave = () => {
-    setHoverTime(null)
+    setHoverPosition(null)
     if (isDragging) {
       setIsDragging(false)
     }
   }
 
-  // Touch event handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     setIsDragging(true)
-    handleTimelineInteraction(e.touches[0].clientX)
+    handleInteraction(e.touches[0].clientX)
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (isDragging) {
-      handleTimelineInteraction(e.touches[0].clientX)
+      handleInteraction(e.touches[0].clientX)
     }
   }
 
@@ -118,30 +90,19 @@ export function VideoTimeline({ currentTime, duration, markers = [], onSeek, cla
     }
   }, [isDragging])
 
+  const progress = (currentTime / duration) * 100
+
   return (
     <div className={cn("relative select-none", className)}>
       {/* Time display */}
-      <div className="absolute -top-6 left-0 text-sm text-white/90 font-medium">
+      <div className="absolute -top-6 left-0 text-sm text-white/90 font-medium tracking-wider">
         {formatTime(currentTime)} / {formatTime(duration)}
       </div>
-
-      {/* Hover time preview */}
-      {hoverTime !== null && (
-        <div
-          className="absolute -top-6 text-sm text-white/90 font-medium pointer-events-none"
-          style={{
-            left: `${(hoverTime / duration) * 100}%`,
-            transform: "translateX(-50%)",
-          }}
-        >
-          {formatTime(hoverTime)}
-        </div>
-      )}
 
       {/* Timeline container */}
       <div
         ref={timelineRef}
-        className="h-1 bg-white/20 rounded-full overflow-hidden cursor-pointer group"
+        className="group relative h-1 bg-white/20 rounded-full overflow-hidden cursor-pointer touch-none"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
@@ -150,35 +111,29 @@ export function VideoTimeline({ currentTime, duration, markers = [], onSeek, cla
       >
         {/* Progress bar */}
         <div
-          className="h-full bg-red-600 transition-all duration-100 ease-out group-hover:bg-red-500"
-          style={{ width: `${progress}%` }}
+          className="absolute inset-0 bg-red-600 rounded-full origin-left transition-transform duration-100 ease-out group-hover:bg-red-500"
+          style={{ transform: `scaleX(${progress / 100})` }}
         />
 
-        {/* Markers */}
-        {markers.map((marker, index) => (
+        {/* Hover preview */}
+        {hoverPosition !== null && (
           <div
-            key={index}
-            className="absolute top-0 w-0.5 h-full bg-white/40"
-            style={{
-              left: `${(marker.time / duration) * 100}%`,
-            }}
-            title={marker.label}
+            className="absolute top-0 left-0 h-full w-1 bg-white/50"
+            style={{ transform: `translateX(${hoverPosition * 100}%)` }}
           />
-        ))}
+        )}
 
         {/* Scrubber handle */}
         <div
           className={cn(
-            "absolute top-1/2 w-3 h-3 bg-red-600 rounded-full -translate-x-1/2 -translate-y-1/2 transition-transform",
-            "group-hover:scale-125",
-            isDragging && "scale-125",
+            "absolute top-1/2 w-3 h-3 -ml-1.5 bg-red-600 rounded-full -translate-y-1/2",
+            "transition-transform duration-150",
+            "group-hover:scale-150",
+            isDragging && "scale-150",
           )}
-          style={{
-            left: `${progress}%`,
-          }}
+          style={{ left: `${progress}%` }}
         />
       </div>
     </div>
   )
 }
-
