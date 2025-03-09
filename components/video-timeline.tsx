@@ -5,18 +5,33 @@ import type React from "react"
 import { useRef, useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 
+interface OverlayTrack {
+  startTime: number
+  endTime: number
+  type: "pip" | "overlay" | "text"
+  label?: string
+}
+
 interface VideoTimelineProps {
   currentTime: number
   duration: number
   onSeek: (time: number) => void
   className?: string
+  overlayTracks?: OverlayTrack[]
 }
 
-export default function VideoTimeline({ currentTime, duration, onSeek, className }: VideoTimelineProps) {
+export default function VideoTimeline({
+  currentTime,
+  duration,
+  onSeek,
+  className,
+  overlayTracks = [],
+}: VideoTimelineProps) {
   const timelineRef = useRef<HTMLDivElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [isHovering, setIsHovering] = useState(false)
   const [hoverPosition, setHoverPosition] = useState<number | null>(null)
+  const [activeOverlay, setActiveOverlay] = useState<OverlayTrack | null>(null)
 
   // Format time as MM:SS
   const formatTime = (time: number) => {
@@ -55,6 +70,12 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
     if (isDragging) {
       handleInteraction(e.clientX)
     }
+
+    // Check if hovering over an overlay track
+    const hoverTime = getTimeForPosition(position)
+    const hoveredOverlay = overlayTracks.find((track) => hoverTime >= track.startTime && hoverTime <= track.endTime)
+
+    setActiveOverlay(hoveredOverlay || null)
   }
 
   const handleMouseUp = () => {
@@ -64,6 +85,7 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
   const handleMouseLeave = () => {
     setHoverPosition(null)
     setIsHovering(false)
+    setActiveOverlay(null)
   }
 
   const handleMouseEnter = () => {
@@ -110,11 +132,55 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
 
+  // Get overlay track color based on type
+  const getOverlayColor = (type: OverlayTrack["type"]) => {
+    switch (type) {
+      case "pip":
+        return "bg-blue-500"
+      case "overlay":
+        return "bg-purple-500"
+      case "text":
+        return "bg-green-500"
+      default:
+        return "bg-gray-500"
+    }
+  }
+
   return (
     <div className={cn("relative select-none", className)}>
       {/* Time display */}
       <div className="absolute -top-6 left-0 text-sm text-white/90 font-medium tracking-wider">
         {formatTime(currentTime)} / {formatTime(duration)}
+      </div>
+
+      {/* Overlay tracks section */}
+      <div className="mb-1 h-3 relative">
+        {overlayTracks.map((track, index) => {
+          const startPercent = (track.startTime / duration) * 100
+          const endPercent = (track.endTime / duration) * 100
+          const width = endPercent - startPercent
+
+          return (
+            <div
+              key={index}
+              className={cn(
+                "absolute h-2 rounded-sm opacity-70 hover:opacity-100 transition-opacity",
+                getOverlayColor(track.type),
+                activeOverlay === track && "opacity-100 ring-1 ring-white",
+              )}
+              style={{
+                left: `${startPercent}%`,
+                width: `${width}%`,
+                top: track.type === "pip" ? "0" : track.type === "overlay" ? "4px" : "8px",
+                height: "4px",
+              }}
+              title={track.label || `${track.type} (${formatTime(track.startTime)} - ${formatTime(track.endTime)})`}
+            />
+          )
+        })}
+
+        {/* Current time indicator for overlay tracks */}
+        <div className="absolute w-0.5 bg-white h-full pointer-events-none" style={{ left: `${progress}%` }} />
       </div>
 
       {/* Timeline container */}
@@ -166,9 +232,30 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
           className="absolute -top-10 px-2 py-1 bg-black/90 rounded text-xs text-white transform -translate-x-1/2 pointer-events-none"
           style={{ left: `${hoverPosition * 100}%` }}
         >
-          {formatTime(getTimeForPosition(hoverPosition))}
+          {activeOverlay ? (
+            <span className="font-medium">{activeOverlay.label || activeOverlay.type}</span>
+          ) : (
+            formatTime(getTimeForPosition(hoverPosition))
+          )}
         </div>
       )}
+
+      {/* Legend for overlay tracks */}
+      <div className="mt-2 flex items-center justify-end gap-3 text-xs text-white/70">
+        <div className="flex items-center">
+          <div className="w-2 h-2 bg-blue-500 rounded-sm mr-1"></div>
+          <span>PiP</span>
+        </div>
+        <div className="flex items-center">
+          <div className="w-2 h-2 bg-purple-500 rounded-sm mr-1"></div>
+          <span>Overlay</span>
+        </div>
+        <div className="flex items-center">
+          <div className="w-2 h-2 bg-green-500 rounded-sm mr-1"></div>
+          <span>Text</span>
+        </div>
+      </div>
     </div>
   )
 }
+
