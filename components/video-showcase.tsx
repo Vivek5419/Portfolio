@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Play, Pause, Volume2, VolumeX } from "lucide-react"
 import { motion, useScroll, useTransform } from "framer-motion"
+import VideoTimeline from "./video-timeline"
 
 export default function VideoShowcase() {
   // Track state for each video separately
@@ -243,19 +244,19 @@ export default function VideoShowcase() {
   }
 
   // Video timeline component
-  const VideoTimeline = ({
-    currentTime,
-    duration,
-    className = "",
-  }: { currentTime: number; duration: number; className?: string }) => {
-    const progress = duration > 0 ? (currentTime / duration) * 100 : 0
+  // const VideoTimeline = ({
+  //   currentTime,
+  //   duration,
+  //   className = "",
+  // }: { currentTime: number; duration: number; className?: string }) => {
+  //   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
 
-    return (
-      <div className={`w-full h-1 bg-gray-700 rounded-full overflow-hidden ${className}`}>
-        <div className="h-full bg-white rounded-full" style={{ width: `${progress}%` }} />
-      </div>
-    )
-  }
+  //   return (
+  //     <div className={`w-full h-1 bg-gray-700 rounded-full overflow-hidden ${className}`}>
+  //       <div className="h-full bg-white rounded-full" style={{ width: `${progress}%` }} />
+  //     </div>
+  //   )
+  // }
 
   // Video controls component with timeline
   const VideoControls = ({
@@ -265,6 +266,7 @@ export default function VideoShowcase() {
     duration,
     onPlayPause,
     onMuteToggle,
+    onSeek,
   }: {
     isPlaying: boolean
     isMuted: boolean
@@ -272,9 +274,10 @@ export default function VideoShowcase() {
     duration: number
     onPlayPause: (e: React.MouseEvent) => void
     onMuteToggle: (e: React.MouseEvent) => void
+    onSeek: (time: number) => void
   }) => (
     <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-      <VideoTimeline currentTime={currentTime} duration={duration} className="mb-2" />
+      <VideoTimeline currentTime={currentTime} duration={duration} onSeek={onSeek} className="mb-2" />
       <div className="flex items-center justify-between">
         <Button variant="ghost" size="icon" onClick={onPlayPause} className="text-white hover:bg-white/20">
           {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
@@ -364,6 +367,11 @@ export default function VideoShowcase() {
                   duration={mainVideoState.duration}
                   onPlayPause={toggleMainPlay}
                   onMuteToggle={toggleMainMute}
+                  onSeek={(time) => {
+                    if (mainVideoRef.current) {
+                      mainVideoRef.current.currentTime = time
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -474,6 +482,12 @@ export default function VideoShowcase() {
                         duration={thumbnailStates[index].duration}
                         onPlayPause={(e) => toggleThumbnailPlay(index, e)}
                         onMuteToggle={(e) => toggleThumbnailMute(index, e)}
+                        onSeek={(time) => {
+                          const videoRef = thumbnailRefs.current[index]
+                          if (videoRef) {
+                            videoRef.currentTime = time
+                          }
+                        }}
                       />
                     </div>
                   </div>
@@ -500,4 +514,3 @@ export default function VideoShowcase() {
   )
 }
 
-      
