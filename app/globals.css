@@ -220,14 +220,38 @@ button {
   will-change: transform, backdrop-filter;
 }
 
+/* Fix for apple-blur-light to match the reference image */
 .apple-blur-light {
-  background-color: rgba(18, 18, 18, 0.2) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1) !important;
-  -webkit-backdrop-filter: blur(25px) !important;
-  backdrop-filter: blur(25px) !important;
+  background-color: rgba(10, 10, 10, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+  -webkit-backdrop-filter: blur(15px) !important;
+  backdrop-filter: blur(15px) !important;
   transform: translateZ(0);
   will-change: transform, backdrop-filter;
+}
+
+/* Ensure the blur effect works in Safari */
+@media not all and (min-resolution: .001dpcm) {
+  @supports (-webkit-appearance: none) {
+    .apple-blur-light {
+      background-color: rgba(10, 10, 10, 0.9) !important;
+    }
+  }
+}
+
+/* Ensure the blur effect is applied correctly in all browsers */
+@supports (-webkit-backdrop-filter: blur(15px)) {
+  .apple-blur-light {
+    background-color: rgba(10, 10, 10, 0.85) !important;
+  }
+}
+
+/* Firefox fallback (since it doesn't support backdrop-filter well) */
+@-moz-document url-prefix() {
+  .apple-blur-light {
+    background-color: rgba(10, 10, 10, 0.9) !important;
+  }
 }
 
 .apple-blur-heavy {
@@ -328,49 +352,98 @@ button {
   backface-visibility: hidden;
 }
 
-/* Video timeline styles */
-.video-timeline {
-  --progress: 0%;
+/* Enhanced timeline styles for better touch and hover interactions */
+.video-timeline-container {
   position: relative;
   width: 100%;
-  height: 4px;
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 9999px;
+  padding: 0.5rem 0;
   cursor: pointer;
-  touch-action: none;
 }
 
-.video-timeline::before {
-  content: "";
+/* Larger touch target for mobile */
+@media (max-width: 768px) {
+  .video-timeline-container {
+    padding: 0.75rem 0;
+  }
+
+  .video-timeline-container::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 0;
+    right: 0;
+    bottom: -10px;
+    z-index: -1;
+  }
+}
+
+.video-timeline-track {
+  position: relative;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  transition: height 0.2s ease;
+}
+
+.video-timeline-track:hover {
+  height: 6px;
+}
+
+.video-timeline-progress {
   position: absolute;
   left: 0;
   top: 0;
   height: 100%;
-  width: var(--progress);
   background-color: #ef4444;
-  border-radius: 9999px;
-  transition: width 0.1s ease-out;
-}
-
-.video-timeline:hover::before {
-  background-color: #dc2626;
+  border-radius: 2px;
+  transform-origin: left;
+  transition: transform 0.1s ease-out;
 }
 
 .video-timeline-handle {
   position: absolute;
   top: 50%;
-  left: var(--progress);
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   background-color: #ef4444;
   border-radius: 50%;
   transform: translate(-50%, -50%) scale(0);
-  transition: transform 0.2s ease-out;
+  transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
-.video-timeline:hover .video-timeline-handle,
-.video-timeline.dragging .video-timeline-handle {
+.video-timeline-container:hover .video-timeline-handle,
+.video-timeline-container.dragging .video-timeline-handle {
   transform: translate(-50%, -50%) scale(1);
+}
+
+.video-timeline-preview {
+  position: absolute;
+  top: -24px;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.video-timeline-container:hover .video-timeline-preview {
+  opacity: 1;
+}
+
+/* Dark glass morphism effect - specifically for "edited by me" section */
+.dark-glass-morphism {
+  background: rgba(0, 0, 0, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  backdrop-filter: blur(10px) !important;
+  transform: translateZ(0);
+  will-change: transform, backdrop-filter;
 }
 
 /* Enhanced blur effect for edited-by-me section */
@@ -385,5 +458,25 @@ button {
   border-radius: 1.5rem;
   overflow: hidden;
   padding: 1rem;
+}
+
+/* Enhanced glass morphism effect */
+.glass-morphism {
+  background: rgba(0, 0, 0, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  transform: translateZ(0);
+  will-change: transform, backdrop-filter;
+}
+
+.glass-morphism::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border-radius: inherit;
+  pointer-events: none;
 }
 
