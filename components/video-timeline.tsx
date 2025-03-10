@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useRef, useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface OverlayTrack {
   startTime: number
@@ -132,65 +133,27 @@ export default function VideoTimeline({
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
 
-  // Get overlay track color based on type
-  const getOverlayColor = (type: OverlayTrack["type"]) => {
-    switch (type) {
-      case "pip":
-        return "bg-blue-500"
-      case "overlay":
-        return "bg-purple-500"
-      case "text":
-        return "bg-green-500"
-      default:
-        return "bg-gray-500"
-    }
-  }
-
   return (
     <div className={cn("relative select-none", className)}>
       {/* Time display */}
-      <div className="absolute -top-6 left-0 text-sm text-white/90 font-medium tracking-wider">
+      <motion.div
+        className="absolute -top-6 left-0 text-sm text-white/90 font-medium tracking-wider"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
         {formatTime(currentTime)} / {formatTime(duration)}
-      </div>
-
-      {/* Overlay tracks section */}
-      <div className="mb-1 h-3 relative">
-        {overlayTracks.map((track, index) => {
-          const startPercent = (track.startTime / duration) * 100
-          const endPercent = (track.endTime / duration) * 100
-          const width = endPercent - startPercent
-
-          return (
-            <div
-              key={index}
-              className={cn(
-                "absolute h-2 rounded-sm opacity-70 hover:opacity-100 transition-opacity",
-                getOverlayColor(track.type),
-                activeOverlay === track && "opacity-100 ring-1 ring-white",
-              )}
-              style={{
-                left: `${startPercent}%`,
-                width: `${width}%`,
-                top: track.type === "pip" ? "0" : track.type === "overlay" ? "4px" : "8px",
-                height: "4px",
-              }}
-              title={track.label || `${track.type} (${formatTime(track.startTime)} - ${formatTime(track.endTime)})`}
-            />
-          )
-        })}
-
-        {/* Current time indicator for overlay tracks */}
-        <div className="absolute w-0.5 bg-white h-full pointer-events-none" style={{ left: `${progress}%` }} />
-      </div>
+      </motion.div>
 
       {/* Timeline container */}
-      <div
+      <motion.div
         ref={timelineRef}
-        className={cn(
-          "group relative h-1 bg-white/20 rounded-full overflow-hidden cursor-pointer touch-none",
-          isDragging && "h-2",
-          isHovering && "h-2",
-        )}
+        className="group relative bg-white/20 rounded-full overflow-hidden cursor-pointer touch-none"
+        initial={{ height: 2 }}
+        animate={{
+          height: isDragging || isHovering ? 4 : 2,
+          transition: { duration: 0.2, ease: "easeInOut" },
+        }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
@@ -200,61 +163,70 @@ export default function VideoTimeline({
         onTouchEnd={handleTouchEnd}
       >
         {/* Progress bar */}
-        <div
-          className={cn(
-            "absolute inset-0 bg-red-600 rounded-full origin-left",
-            (isHovering || isDragging) && "bg-red-500",
-          )}
-          style={{ transform: `scaleX(${progress / 100})` }}
+        <motion.div
+          className="absolute inset-0 bg-red-600 rounded-full origin-left"
+          initial={{ scaleX: 0 }}
+          animate={{
+            scaleX: progress / 100,
+            backgroundColor: isHovering || isDragging ? "#f87171" : "#ef4444",
+          }}
+          transition={{
+            scaleX: { duration: 0.05, ease: "linear" },
+            backgroundColor: { duration: 0.2 },
+          }}
         />
 
         {/* Hover preview */}
-        {hoverPosition !== null && (
-          <div
-            className="absolute top-0 left-0 h-full w-0.5 bg-white/50"
-            style={{ transform: `translateX(${hoverPosition * 100}%)` }}
-          />
-        )}
+        <AnimatePresence>
+          {hoverPosition !== null && (
+            <motion.div
+              className="absolute top-0 left-0 h-full w-0.5 bg-white/50"
+              style={{ left: `${hoverPosition * 100}%` }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Scrubber handle */}
-        <div
-          className={cn(
-            "absolute top-1/2 -ml-1.5 w-3 h-3 bg-red-600 rounded-full -translate-y-1/2",
-            (isHovering || isDragging) && "scale-150 bg-red-500",
-          )}
+        <motion.div
+          className="absolute top-1/2 -translate-y-1/2 bg-red-600 rounded-full"
           style={{ left: `${progress}%` }}
+          initial={{ width: 8, height: 8, x: -4 }}
+          animate={{
+            width: isHovering || isDragging ? 12 : 8,
+            height: isHovering || isDragging ? 12 : 8,
+            x: isHovering || isDragging ? -6 : -4,
+            backgroundColor: isHovering || isDragging ? "#f87171" : "#ef4444",
+          }}
+          transition={{ duration: 0.2, ease: "easeInOut" }}
         />
-      </div>
+      </motion.div>
 
       {/* Preview time tooltip */}
-      {hoverPosition !== null && (
-        <div
-          className="absolute -top-10 px-2 py-1 bg-black/90 rounded text-xs text-white transform -translate-x-1/2 pointer-events-none"
-          style={{ left: `${hoverPosition * 100}%` }}
-        >
-          {activeOverlay ? (
-            <span className="font-medium">{activeOverlay.label || activeOverlay.type}</span>
-          ) : (
-            formatTime(getTimeForPosition(hoverPosition))
-          )}
-        </div>
-      )}
-
-      {/* Legend for overlay tracks */}
-      <div className="mt-2 flex items-center justify-end gap-3 text-xs text-white/70">
-        <div className="flex items-center">
-          <div className="w-2 h-2 bg-blue-500 rounded-sm mr-1"></div>
-          <span>PiP</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-2 h-2 bg-purple-500 rounded-sm mr-1"></div>
-          <span>Overlay</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-2 h-2 bg-green-500 rounded-sm mr-1"></div>
-          <span>Text</span>
-        </div>
-      </div>
+      <AnimatePresence>
+        {hoverPosition !== null && (
+          <motion.div
+            className="absolute px-2 py-1 bg-black/90 rounded text-xs text-white transform -translate-x-1/2 pointer-events-none"
+            style={{
+              left: `${hoverPosition * 100}%`,
+              top: isDragging ? -28 : -24,
+            }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 5 }}
+            transition={{ duration: 0.2 }}
+          >
+            {activeOverlay ? (
+              <span className="font-medium">{activeOverlay.label || activeOverlay.type}</span>
+            ) : (
+              formatTime(getTimeForPosition(hoverPosition))
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
