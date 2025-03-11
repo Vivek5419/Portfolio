@@ -219,10 +219,10 @@ export default function VideoTimeline({
         {/* Scrubber handle */}
         <div
           className={cn(
-            "absolute top-1/2 w-3 h-3 bg-red-600 rounded-full -translate-y-1/2 translate-x-0",
+            "absolute top-1/2 w-3 h-3 bg-red-600 rounded-full -translate-y-1/2",
             (isHovering || isDragging) && "scale-150 bg-red-500",
           )}
-          style={{ left: `${progress}%`, transform: "translateY(-50%)" }}
+          style={{ left: `${progress}%` }}
         />
       </div>
 
