@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Play, Pause, Volume2, VolumeX } from "lucide-react"
 import { motion, useScroll, useTransform } from "framer-motion"
-import VideoTimeline from "./video-timeline"
+import VideoTimeline from "@/components/video-timeline"
 
 // Video controls component with timeline
 const VideoControls = ({
@@ -28,12 +28,7 @@ const VideoControls = ({
   onSeek: (time: number) => void
   overlayTracks?: { startTime: number; endTime: number; type: "pip" | "overlay" | "text"; label?: string }[]
 }) => (
-  <motion.div
-    className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent"
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.3 }}
-  >
+  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
     <VideoTimeline
       currentTime={currentTime}
       duration={duration}
@@ -42,18 +37,14 @@ const VideoControls = ({
       overlayTracks={overlayTracks}
     />
     <div className="flex items-center justify-between">
-      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-        <Button variant="ghost" size="icon" onClick={onPlayPause} className="text-white hover:bg-white/20">
-          {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
-        </Button>
-      </motion.div>
-      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-        <Button variant="ghost" size="icon" onClick={onMuteToggle} className="text-white hover:bg-white/20">
-          {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
-        </Button>
-      </motion.div>
+      <Button variant="ghost" size="icon" onClick={onPlayPause} className="text-white hover:bg-white/20">
+        {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+      </Button>
+      <Button variant="ghost" size="icon" onClick={onMuteToggle} className="text-white hover:bg-white/20">
+        {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+      </Button>
     </div>
-  </motion.div>
+  </div>
 )
 
 export default function VideoShowcase() {
@@ -549,4 +540,13 @@ export default function VideoShowcase() {
             className="mt-8 text-center"
           >
             <div className="apple-blur-light rounded-3xl border border-zinc-800/30 overflow-hidden p-4 apple-glow">
-              <p
+              <p className="text-lg text-gray-300">All these videos are edited by me</p>
+            </div>
+          </motion.div>
+        </div>
+      </motion.div>
+    </section>
+  )
+}
+
+        
