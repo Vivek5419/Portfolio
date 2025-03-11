@@ -78,25 +78,25 @@ export default function VideoShowcase() {
       id: 0,
       title: "Main Showcase",
       src: "/videos/main-showcase.mp4",
-      poster: "/placeholder.svg?height=720&width=405&text=Main+Video",
+      poster: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Useless-WAS3ERoM05tL633OiHEjDiWcOtps8I.png",
     },
     {
       id: 1,
-      title: "Short Sample 1",
+      title: "Season 08 Episode 02",
       src: "/videos/short-sample-1.mp4",
-      poster: "/placeholder.svg?height=720&width=405&text=Short+1",
+      poster: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/1.jpg-DZbIjLB65U3yTFBAkCF4rxJM024FI2.jpeg",
     },
     {
       id: 2,
-      title: "Short Sample 2",
+      title: "The Life-Changing Wallet",
       src: "/videos/short-sample-2.mp4",
-      poster: "/placeholder.svg?height=720&width=405&text=Short+2",
+      poster: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/2.jpg-EGLISlFMzFbL39oHQUaEu5SrIbmTUl.jpeg",
     },
     {
       id: 3,
-      title: "Short Sample 3",
+      title: "The Mirror's Secret",
       src: "/videos/short-sample-3.mp4",
-      poster: "/placeholder.svg?height=720&width=405&text=Short+3",
+      poster: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3.jpg-hbXOoSmYUIfMHKoSkphGeyEY4it3KZ.jpeg",
     },
   ]
 
@@ -516,4 +516,3 @@ export default function VideoShowcase() {
   )
 }
 
-                        
