@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Play, Pause, Volume2, VolumeX } from "lucide-react"
 import { motion, useScroll, useTransform } from "framer-motion"
-import VideoTimeline from "@/components/video-timeline"
+import VideoTimeline from "./video-timeline"
 
 // Video controls component with timeline
 const VideoControls = ({
@@ -17,7 +17,6 @@ const VideoControls = ({
   onPlayPause,
   onMuteToggle,
   onSeek,
-  overlayTracks,
 }: {
   isPlaying: boolean
   isMuted: boolean
@@ -26,25 +25,27 @@ const VideoControls = ({
   onPlayPause: (e: React.MouseEvent) => void
   onMuteToggle: (e: React.MouseEvent) => void
   onSeek: (time: number) => void
-  overlayTracks?: { startTime: number; endTime: number; type: "pip" | "overlay" | "text"; label?: string }[]
 }) => (
-  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-    <VideoTimeline
-      currentTime={currentTime}
-      duration={duration}
-      onSeek={onSeek}
-      className="mb-2"
-      overlayTracks={overlayTracks}
-    />
+  <motion.div
+    className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent"
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.3 }}
+  >
+    <VideoTimeline currentTime={currentTime} duration={duration} onSeek={onSeek} className="mb-2" />
     <div className="flex items-center justify-between">
-      <Button variant="ghost" size="icon" onClick={onPlayPause} className="text-white hover:bg-white/20">
-        {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
-      </Button>
-      <Button variant="ghost" size="icon" onClick={onMuteToggle} className="text-white hover:bg-white/20">
-        {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
-      </Button>
+      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+        <Button variant="ghost" size="icon" onClick={onPlayPause} className="text-white hover:bg-white/20">
+          {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+        </Button>
+      </motion.div>
+      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+        <Button variant="ghost" size="icon" onClick={onMuteToggle} className="text-white hover:bg-white/20">
+          {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+        </Button>
+      </motion.div>
     </div>
-  </div>
+  </motion.div>
 )
 
 export default function VideoShowcase() {
@@ -99,31 +100,6 @@ export default function VideoShowcase() {
     },
   ]
 
-  // Sample overlay tracks for each video
-  const videoOverlayTracks = [
-    // Main video overlays
-    [
-      { startTime: 5, endTime: 15, type: "pip" as const, label: "Reaction PiP" },
-      { startTime: 20, endTime: 35, type: "overlay" as const, label: "Effect" },
-      { startTime: 10, endTime: 40, type: "text" as const, label: "Subtitles" },
-    ],
-    // Thumbnail 1 overlays
-    [
-      { startTime: 2, endTime: 8, type: "pip" as const },
-      { startTime: 12, endTime: 18, type: "text" as const },
-    ],
-    // Thumbnail 2 overlays
-    [
-      { startTime: 3, endTime: 10, type: "overlay" as const },
-      { startTime: 5, endTime: 15, type: "text" as const },
-    ],
-    // Thumbnail 3 overlays
-    [
-      { startTime: 1, endTime: 7, type: "pip" as const },
-      { startTime: 9, endTime: 14, type: "overlay" as const },
-    ],
-  ]
-
   // Function to update video progress
   const updateVideoProgress = () => {
     // Update main video progress
@@ -151,12 +127,12 @@ export default function VideoShowcase() {
     })
 
     // Schedule next update
-    progressTimerRef.current = setTimeout(updateVideoProgress, 250)
+    progressTimerRef.current = setTimeout(updateVideoProgress, 50) // More frequent updates for smoother animation
   }
 
   // Start progress updates
   useEffect(() => {
-    progressTimerRef.current = setTimeout(updateVideoProgress, 250)
+    progressTimerRef.current = setTimeout(updateVideoProgress, 50)
 
     return () => {
       if (progressTimerRef.current) {
@@ -307,21 +283,6 @@ export default function VideoShowcase() {
     }
   }
 
-  // Video timeline component
-  // const VideoTimeline = ({
-  //   currentTime,
-  //   duration,
-  //   className = "",
-  // }: { currentTime: number; duration: number; className?: string }) => {
-  //   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
-
-  //   return (
-  //     <div className={`w-full h-1 bg-gray-700 rounded-full overflow-hidden ${className}`}>
-  //       <div className="h-full bg-white rounded-full" style={{ width: `${progress}%` }} />
-  //     </div>
-  //   )
-  // }
-
   return (
     <section id="showcase" ref={sectionRef} className="py-20 overflow-hidden">
       <motion.div className="container px-4 md:px-6" style={{ opacity, y }}>
@@ -342,17 +303,22 @@ export default function VideoShowcase() {
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             viewport={{ once: true }}
             style={{ isolation: "isolate" }}
+            whileHover={{ scale: 1.02 }}
+            className="transition-all duration-300"
           >
             <div className="apple-blur-heavy rounded-3xl border border-zinc-800/30 overflow-hidden apple-glow">
               <div className="p-0 relative">
                 <div className="aspect-[9/16] w-full max-w-[405px] mx-auto">
-                  <video
+                  <motion.video
                     ref={mainVideoRef}
                     className="w-full h-full object-cover"
                     poster={videos[activeVideoIndex].poster}
                     muted={mainVideoState.isMuted}
                     playsInline
                     preload="auto"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
                     onPlay={() => {
                       // Pause all other videos when this one plays
                       thumbnailRefs.current.forEach((videoRef, index) => {
@@ -389,7 +355,7 @@ export default function VideoShowcase() {
                   >
                     <source src={videos[activeVideoIndex].src} type="video/mp4" />
                     Your browser does not support the video tag.
-                  </video>
+                  </motion.video>
                 </div>
 
                 {/* Main video controls with timeline */}
@@ -400,7 +366,6 @@ export default function VideoShowcase() {
                   duration={mainVideoState.duration}
                   onPlayPause={toggleMainPlay}
                   onMuteToggle={toggleMainMute}
-                  overlayTracks={videoOverlayTracks[activeVideoIndex]}
                   onSeek={(time) => {
                     if (mainVideoRef.current) {
                       mainVideoRef.current.currentTime = time
@@ -437,7 +402,7 @@ export default function VideoShowcase() {
                 <div className="apple-blur rounded-3xl border border-zinc-800/30 overflow-hidden apple-glow">
                   <div className="p-0">
                     <div className="relative aspect-[9/16] bg-zinc-800">
-                      <video
+                      <motion.video
                         ref={(el) => (thumbnailRefs.current[index] = el)}
                         className="w-full h-full object-cover"
                         src={video.src}
@@ -445,6 +410,9 @@ export default function VideoShowcase() {
                         muted={thumbnailStates[index].isMuted}
                         playsInline
                         preload="auto"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5 }}
                         onPlay={() => {
                           // Pause main video when this one plays
                           if (mainVideoRef.current && !mainVideoRef.current.paused) {
@@ -506,7 +474,7 @@ export default function VideoShowcase() {
                         }}
                       >
                         <source src={video.src} type="video/mp4" />
-                      </video>
+                      </motion.video>
 
                       {/* Thumbnail video controls with timeline */}
                       <VideoControls
@@ -516,7 +484,6 @@ export default function VideoShowcase() {
                         duration={thumbnailStates[index].duration}
                         onPlayPause={(e) => toggleThumbnailPlay(index, e)}
                         onMuteToggle={(e) => toggleThumbnailMute(index, e)}
-                        overlayTracks={videoOverlayTracks[index + 1]} // +1 because thumbnails start at index 1
                         onSeek={(time) => {
                           const videoRef = thumbnailRefs.current[index]
                           if (videoRef) {
@@ -549,4 +516,4 @@ export default function VideoShowcase() {
   )
 }
 
-        
+                        
