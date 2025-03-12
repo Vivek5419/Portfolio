@@ -18,6 +18,8 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
   const [isDragging, setIsDragging] = useState(false)
   const [isHovering, setIsHovering] = useState(false)
   const [hoverPosition, setHoverPosition] = useState<number | null>(null)
+  const [dragStartX, setDragStartX] = useState<number | null>(null)
+  const [lastValidPosition, setLastValidPosition] = useState<number>(0)
 
   // Use spring animation for smoother progress updates
   const springProgress = useSpring(0, {
@@ -29,10 +31,12 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
 
   // Update spring value when currentTime changes
   useEffect(() => {
-    if (duration > 0) {
-      springProgress.set((currentTime / duration) * 100)
+    if (duration > 0 && !isDragging) {
+      const progress = (currentTime / duration) * 100
+      springProgress.set(progress)
+      setLastValidPosition(progress)
     }
-  }, [currentTime, duration, springProgress])
+  }, [currentTime, duration, springProgress, isDragging])
 
   // Format time as MM:SS
   const formatTime = (time: number) => {
@@ -41,97 +45,88 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
     return `${minutes}:${seconds.toString().padStart(2, "0")}`
   }
 
-  // Calculate time for hover preview
+  // Calculate time for position with constraints
   const getTimeForPosition = (position: number) => {
-    return Math.max(0, Math.min(position * duration, duration))
+    const constrainedPosition = Math.max(0, Math.min(position, 1))
+    return constrainedPosition * duration
   }
 
-  // Handle mouse/touch events
-  const handleInteraction = (clientX: number) => {
-    if (!timelineRef.current) return
+  // Get precise cursor position
+  const getCursorPosition = (event: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) => {
+    if (!timelineRef.current) return null
 
     const rect = timelineRef.current.getBoundingClientRect()
-    // Add bounds checking to prevent weird behavior at edges
-    const position = Math.max(0, Math.min((clientX - rect.left) / rect.width, 1))
-    const newTime = getTimeForPosition(position)
-    onSeek(newTime)
+    const clientX = "touches" in event ? event.touches[0].clientX : event.clientX
+    const position = (clientX - rect.left) / rect.width
+    return Math.max(0, Math.min(position, 1))
   }
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true)
-    handleInteraction(e.clientX)
-  }
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const rect = timelineRef.current?.getBoundingClientRect()
-    if (!rect) return
-
-    const position = (e.clientX - rect.left) / rect.width
-    setHoverPosition(position)
-
-    if (isDragging) {
-      handleInteraction(e.clientX)
+  // Handle interaction start
+  const handleInteractionStart = (event: React.MouseEvent | React.TouchEvent) => {
+    event.preventDefault()
+    const position = getCursorPosition(event)
+    if (position !== null) {
+      setIsDragging(true)
+      setDragStartX(position)
+      onSeek(getTimeForPosition(position))
+      setLastValidPosition(position * 100)
     }
   }
 
-  const handleMouseUp = () => {
-    setIsDragging(false)
-  }
-
-  const handleMouseLeave = () => {
-    setHoverPosition(null)
-    setIsHovering(false)
-  }
-
-  const handleMouseEnter = () => {
-    setIsHovering(true)
-  }
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    // Don't prevent default here to allow better touch behavior
-    setIsDragging(true)
-    handleInteraction(e.touches[0].clientX)
-  }
-
-  const handleTouchMove = (e: React.TouchEvent) => {
+  // Handle interaction move
+  const handleInteractionMove = (event: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) => {
     if (isDragging) {
-      // Only prevent default when actually dragging
-      e.preventDefault()
-      handleInteraction(e.touches[0].clientX)
+      const position = getCursorPosition(event)
+      if (position !== null) {
+        onSeek(getTimeForPosition(position))
+        springProgress.set(position * 100)
+        setLastValidPosition(position * 100)
+        setHoverPosition(position)
+      }
+    } else if ("clientX" in event) {
+      const position = getCursorPosition(event)
+      if (position !== null) {
+        setHoverPosition(position)
+      }
     }
   }
 
-  const handleTouchEnd = () => {
+  // Handle interaction end
+  const handleInteractionEnd = () => {
     setIsDragging(false)
-  }
-
-  const handleTouchCancel = () => {
-    setIsDragging(false)
+    setDragStartX(null)
   }
 
   // Add/remove document-level event listeners
   useEffect(() => {
-    const handleGlobalMouseUp = () => {
-      setIsDragging(false)
+    const handleGlobalMove = (e: MouseEvent | TouchEvent) => {
+      if (isDragging) {
+        e.preventDefault()
+        handleInteractionMove(e)
+      }
     }
 
-    const handleGlobalTouchEnd = () => {
-      setIsDragging(false)
+    const handleGlobalEnd = () => {
+      handleInteractionEnd()
     }
 
     if (isDragging) {
-      document.addEventListener("mouseup", handleGlobalMouseUp)
-      document.addEventListener("touchend", handleGlobalTouchEnd)
+      document.addEventListener("mousemove", handleGlobalMove)
+      document.addEventListener("touchmove", handleGlobalMove, { passive: false })
+      document.addEventListener("mouseup", handleGlobalEnd)
+      document.addEventListener("touchend", handleGlobalEnd)
     }
 
     return () => {
-      document.removeEventListener("mouseup", handleGlobalMouseUp)
-      document.removeEventListener("touchend", handleGlobalTouchEnd)
+      document.removeEventListener("mousemove", handleGlobalMove)
+      document.removeEventListener("touchmove", handleGlobalMove)
+      document.removeEventListener("mouseup", handleGlobalEnd)
+      document.removeEventListener("touchend", handleGlobalEnd)
     }
   }, [isDragging])
 
   return (
-    <div className={cn("relative select-none", className)}>
+    <div className={cn("relative select-none touch-none", className)}>
       {/* Time display */}
       <div className="absolute -top-6 left-0 text-sm text-white/90 font-medium tracking-wider">
         {formatTime(currentTime)} / {formatTime(duration)}
@@ -141,29 +136,34 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
       <motion.div
         ref={timelineRef}
         className={cn(
-          "group relative h-1.5 bg-white/20 rounded-full overflow-hidden cursor-pointer touch-none",
+          "group relative h-1.5 bg-white/10 rounded-full overflow-hidden cursor-pointer",
           isDragging && "h-2.5",
           isHovering && "h-2.5",
         )}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        onMouseEnter={handleMouseEnter}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onTouchCancel={handleTouchCancel}
+        onMouseDown={(e) => handleInteractionStart(e)}
+        onTouchStart={(e) => handleInteractionStart(e)}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => {
+          setIsHovering(false)
+          setHoverPosition(null)
+        }}
         whileHover={{ height: 10 }}
         animate={{ height: isDragging ? 10 : 6 }}
         transition={{ duration: 0.2 }}
       >
-        {/* Progress bar with spring animation */}
+        {/* Loaded progress bar (blurred background) */}
+        <motion.div
+          className="absolute inset-0 bg-white/20 backdrop-blur-sm rounded-full"
+          style={{ width: `${springProgress.get()}%` }}
+        />
+
+        {/* Progress bar (red overlay) */}
         <motion.div
           className={cn(
             "absolute inset-0 bg-red-600/70 rounded-full origin-left",
             (isHovering || isDragging) && "bg-red-500/80",
           )}
-          style={{ width: springProgress }}
+          style={{ width: `${springProgress.get()}%` }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         />
 
@@ -201,3 +201,4 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
   )
 }
 
+                
