@@ -126,13 +126,13 @@ export default function VideoShowcase() {
       }
     })
 
-    // Schedule next update
-    progressTimerRef.current = setTimeout(updateVideoProgress, 50) // More frequent updates for smoother animation
+    // Schedule next update - using requestAnimationFrame for smoother updates
+    progressTimerRef.current = window.setTimeout(updateVideoProgress, 16) // ~60fps for ultra-smooth updates
   }
 
   // Start progress updates
   useEffect(() => {
-    progressTimerRef.current = setTimeout(updateVideoProgress, 50)
+    progressTimerRef.current = window.setTimeout(updateVideoProgress, 16)
 
     return () => {
       if (progressTimerRef.current) {
@@ -221,6 +221,31 @@ export default function VideoShowcase() {
 
     mainVideoRef.current.muted = !mainVideoRef.current.muted
     setMainVideoState((prev) => ({ ...prev, isMuted: mainVideoRef.current!.muted }))
+  }
+
+  // Smooth seeking function
+  const smoothSeek = (time: number, videoRef: HTMLVideoElement) => {
+    // Use requestAnimationFrame for smoother seeking
+    const currentTime = videoRef.currentTime
+    const targetTime = time
+    const duration = 100 // ms
+    const startTime = performance.now()
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime
+      const progress = Math.min(elapsed / duration, 1)
+
+      // Ease function for smoother transition
+      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress)
+
+      videoRef.currentTime = currentTime + (targetTime - currentTime) * easeProgress
+
+      if (progress < 1) {
+        requestAnimationFrame(animate)
+      }
+    }
+
+    requestAnimationFrame(animate)
   }
 
   // Thumbnail video controls
@@ -368,7 +393,7 @@ export default function VideoShowcase() {
                   onMuteToggle={toggleMainMute}
                   onSeek={(time) => {
                     if (mainVideoRef.current) {
-                      mainVideoRef.current.currentTime = time
+                      smoothSeek(time, mainVideoRef.current)
                     }
                   }}
                 />
@@ -487,7 +512,7 @@ export default function VideoShowcase() {
                         onSeek={(time) => {
                           const videoRef = thumbnailRefs.current[index]
                           if (videoRef) {
-                            videoRef.currentTime = time
+                            smoothSeek(time, videoRef)
                           }
                         }}
                       />
@@ -516,3 +541,4 @@ export default function VideoShowcase() {
   )
 }
 
+                                
