@@ -21,9 +21,10 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
 
   // Use spring animation for smoother progress updates
   const springProgress = useSpring(0, {
-    stiffness: 100,
-    damping: 30,
+    stiffness: 170,
+    damping: 26,
     restDelta: 0.001,
+    mass: 0.6,
   })
 
   // Update spring value when currentTime changes
@@ -50,7 +51,8 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
     if (!timelineRef.current) return
 
     const rect = timelineRef.current.getBoundingClientRect()
-    const position = (clientX - rect.left) / rect.width
+    // Add bounds checking to prevent weird behavior at edges
+    const position = Math.max(0, Math.min((clientX - rect.left) / rect.width, 1))
     const newTime = getTimeForPosition(position)
     onSeek(newTime)
   }
@@ -86,19 +88,24 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
   }
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault() // Prevent scrolling while touching the timeline
+    // Don't prevent default here to allow better touch behavior
     setIsDragging(true)
     handleInteraction(e.touches[0].clientX)
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (isDragging) {
-      e.preventDefault() // Prevent scrolling while dragging
+      // Only prevent default when actually dragging
+      e.preventDefault()
       handleInteraction(e.touches[0].clientX)
     }
   }
 
   const handleTouchEnd = () => {
+    setIsDragging(false)
+  }
+
+  const handleTouchCancel = () => {
     setIsDragging(false)
   }
 
@@ -145,6 +152,7 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchCancel}
         whileHover={{ height: 10 }}
         animate={{ height: isDragging ? 10 : 6 }}
         transition={{ duration: 0.2 }}
@@ -152,8 +160,8 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
         {/* Progress bar with spring animation */}
         <motion.div
           className={cn(
-            "absolute inset-0 bg-red-600 rounded-full origin-left",
-            (isHovering || isDragging) && "bg-red-500",
+            "absolute inset-0 bg-red-600/70 rounded-full origin-left",
+            (isHovering || isDragging) && "bg-red-500/80",
           )}
           style={{ width: springProgress }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
