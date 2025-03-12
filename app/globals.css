@@ -721,3 +721,44 @@ button {
   }
 }
 
+/* Add these styles to your globals.css */
+
+/* Timeline styles with blur effect */
+.timeline-loaded-progress {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: inherit;
+  transform-origin: left;
+  will-change: transform, width;
+  transition: width 0.05s linear;
+}
+
+/* Ensure proper stacking and touch handling */
+.timeline-container {
+  position: relative;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Larger touch target for mobile */
+@media (max-width: 768px) {
+  .timeline-container {
+    padding: 12px 0;
+  }
+
+  .timeline-container::before {
+    content: "";
+    position: absolute;
+    top: -12px;
+    bottom: -12px;
+    left: 0;
+    right: 0;
+  }
+}
+
+  
