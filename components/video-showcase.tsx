@@ -100,44 +100,80 @@ export default function VideoShowcase() {
     },
   ]
 
-  // Function to update video progress
-  const updateVideoProgress = () => {
-    // Update main video progress
-    if (mainVideoRef.current) {
+  // Improved smooth seeking function with better touch response
+  const smoothSeek = (time: number, videoRef: HTMLVideoElement) => {
+    // Set the time directly for more responsive seeking
+    videoRef.currentTime = time
+
+    // Update the state immediately to reflect the change
+    if (videoRef === mainVideoRef.current) {
       setMainVideoState((prev) => ({
         ...prev,
-        currentTime: mainVideoRef.current!.currentTime,
-        duration: mainVideoRef.current!.duration || 0,
+        currentTime: time,
       }))
+    } else {
+      // Find which thumbnail video was updated
+      thumbnailRefs.current.forEach((ref, index) => {
+        if (ref === videoRef) {
+          setThumbnailStates((prev) => {
+            const newStates = [...prev]
+            newStates[index] = {
+              ...newStates[index],
+              currentTime: time,
+            }
+            return newStates
+          })
+        }
+      })
     }
+  }
 
-    // Update thumbnail videos progress
-    thumbnailRefs.current.forEach((videoRef, index) => {
-      if (videoRef) {
-        setThumbnailStates((prev) => {
-          const newStates = [...prev]
-          newStates[index] = {
-            ...newStates[index],
-            currentTime: videoRef.currentTime,
-            duration: videoRef.duration || 0,
-          }
-          return newStates
-        })
+  // Replace the updateVideoProgress function with this optimized version:
+  const updateVideoProgress = () => {
+    // Use requestAnimationFrame for smoother updates
+    const animationFrame = requestAnimationFrame(() => {
+      // Update main video progress
+      if (mainVideoRef.current) {
+        setMainVideoState((prev) => ({
+          ...prev,
+          currentTime: mainVideoRef.current!.currentTime,
+          duration: mainVideoRef.current!.duration || 0,
+        }))
       }
+
+      // Update thumbnail videos progress
+      thumbnailRefs.current.forEach((videoRef, index) => {
+        if (videoRef) {
+          setThumbnailStates((prev) => {
+            const newStates = [...prev]
+            newStates[index] = {
+              ...newStates[index],
+              currentTime: videoRef.currentTime,
+              duration: videoRef.duration || 0,
+            }
+            return newStates
+          })
+        }
+      })
+
+      // Schedule next update
+      progressTimerRef.current = window.setTimeout(updateVideoProgress, 33) // ~30fps for smooth updates
     })
 
-    // Schedule next update - using requestAnimationFrame for smoother updates
-    progressTimerRef.current = window.setTimeout(updateVideoProgress, 16) // ~60fps for ultra-smooth updates
+    return () => {
+      cancelAnimationFrame(animationFrame)
+    }
   }
 
   // Start progress updates
   useEffect(() => {
-    progressTimerRef.current = window.setTimeout(updateVideoProgress, 16)
+    const cleanup = updateVideoProgress()
 
     return () => {
       if (progressTimerRef.current) {
         clearTimeout(progressTimerRef.current)
       }
+      cleanup()
     }
   }, [])
 
@@ -221,31 +257,6 @@ export default function VideoShowcase() {
 
     mainVideoRef.current.muted = !mainVideoRef.current.muted
     setMainVideoState((prev) => ({ ...prev, isMuted: mainVideoRef.current!.muted }))
-  }
-
-  // Smooth seeking function
-  const smoothSeek = (time: number, videoRef: HTMLVideoElement) => {
-    // Use requestAnimationFrame for smoother seeking
-    const currentTime = videoRef.currentTime
-    const targetTime = time
-    const duration = 100 // ms
-    const startTime = performance.now()
-
-    const animate = (now: number) => {
-      const elapsed = now - startTime
-      const progress = Math.min(elapsed / duration, 1)
-
-      // Ease function for smoother transition
-      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress)
-
-      videoRef.currentTime = currentTime + (targetTime - currentTime) * easeProgress
-
-      if (progress < 1) {
-        requestAnimationFrame(animate)
-      }
-    }
-
-    requestAnimationFrame(animate)
   }
 
   // Thumbnail video controls
@@ -531,14 +542,4 @@ export default function VideoShowcase() {
             viewport={{ once: true }}
             className="mt-8 text-center"
           >
-            <div className="apple-blur-light rounded-3xl border border-zinc-800/30 overflow-hidden p-4 apple-glow">
-              <p className="text-lg text-gray-300">All these videos are edited by me</p>
-            </div>
-          </motion.div>
-        </div>
-      </motion.div>
-    </section>
-  )
-}
-
-                                
+            <div className="apple-blur-light rounded-3xl border border-zinc-800/30 overflow-hidden p-4 apple-glo
