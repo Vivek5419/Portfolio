@@ -84,7 +84,7 @@ export default function VideoShowcase() {
       id: 1,
       title: "Season 08 Episode 02",
       src: "/videos/short-sample-1.mp4",
-      poster: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/1.jpg-DZbIjLB65U3yTFBAkCF4rxJM024FI2.jpeg",
+      poster: "/1.png", // Updated poster image
     },
     {
       id: 2,
@@ -542,4 +542,5 @@ export default function VideoShowcase() {
             viewport={{ once: true }}
             className="mt-8 text-center"
           >
-            <div className="apple-blur-light rounded-3xl border border-zinc-800/30 overflow-hidden p-4 apple-glo
+            <div className="apple-blur-light rounded-3xl border border-zinc-800/30 overflow-hidden p-4 apple-glow">
+              <p className="text-lg text-gray-300">All these vi
