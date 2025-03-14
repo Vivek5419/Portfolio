@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useRef, useEffect, useState } from "react"
-import { cn } from "@/lib/utils"
+import { n } from "@/lib/utils"
 import { motion, AnimatePresence, useSpring } from "framer-motion"
 
 interface VideoTimelineProps {
