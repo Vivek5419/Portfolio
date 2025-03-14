@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useRef, useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
-import { motion, AnimatePresence, useSpring } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface VideoTimelineProps {
   currentTime: number
@@ -18,20 +18,6 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
   const [isDragging, setIsDragging] = useState(false)
   const [isHovering, setIsHovering] = useState(false)
   const [hoverPosition, setHoverPosition] = useState<number | null>(null)
-
-  // Use spring animation for smoother progress updates
-  const springProgress = useSpring(0, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  })
-
-  // Update spring value when currentTime changes
-  useEffect(() => {
-    if (duration > 0) {
-      springProgress.set((currentTime / duration) * 100)
-    }
-  }, [currentTime, duration, springProgress])
 
   // Format time as MM:SS
   const formatTime = (time: number) => {
@@ -123,6 +109,8 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
     }
   }, [isDragging])
 
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0
+
   return (
     <div className={cn("relative select-none", className)}>
       {/* Time display */}
@@ -134,9 +122,9 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
       <motion.div
         ref={timelineRef}
         className={cn(
-          "group relative h-1.5 bg-white/20 rounded-full overflow-hidden cursor-pointer touch-none",
-          isDragging && "h-2.5",
-          isHovering && "h-2.5",
+          "group relative h-1 bg-white/20 rounded-full overflow-hidden cursor-pointer touch-none",
+          isDragging && "h-2",
+          isHovering && "h-2",
         )}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -145,25 +133,25 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        whileHover={{ height: 10 }}
-        animate={{ height: isDragging ? 10 : 6 }}
+        whileHover={{ height: 4 }}
         transition={{ duration: 0.2 }}
       >
-        {/* Progress bar with spring animation */}
+        {/* Progress bar */}
         <motion.div
           className={cn(
             "absolute inset-0 bg-red-600 rounded-full origin-left",
             (isHovering || isDragging) && "bg-red-500",
           )}
-          style={{ width: springProgress }}
+          style={{ width: `${progress}%` }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          layout
         />
 
-        {/* Hover preview line */}
+        {/* Hover preview */}
         <AnimatePresence>
           {hoverPosition !== null && (
             <motion.div
-              className="absolute top-0 left-0 h-full w-0.5 bg-white/70"
+              className="absolute top-0 left-0 h-full w-0.5 bg-white/50"
               style={{ left: `${hoverPosition * 100}%` }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -172,6 +160,21 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
             />
           )}
         </AnimatePresence>
+
+        {/* Scrubber handle */}
+        <motion.div
+          className={cn(
+            "absolute top-1/2 w-3 h-3 bg-red-600 rounded-full -translate-y-1/2",
+            (isHovering || isDragging) && "scale-150 bg-red-500",
+          )}
+          style={{ left: `${progress}%`, x: "-50%" }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          layout
+          animate={{
+            scale: isHovering || isDragging ? 1.5 : 1,
+            backgroundColor: isHovering || isDragging ? "#ef4444" : "#dc2626",
+          }}
+        />
       </motion.div>
 
       {/* Preview time tooltip */}
