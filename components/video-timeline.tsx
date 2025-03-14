@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useRef, useEffect, useState } from "react"
-import { n } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 import { motion, AnimatePresence, useSpring } from "framer-motion"
 
 interface VideoTimelineProps {
@@ -193,4 +193,3 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
   )
 }
 
-              
