@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useState, useEffect } from "react"
-import { VideoTimeline } from "./video-timeline"
+import VideoTimeline from "./video-timeline"
 import { Play, Pause, Volume2, VolumeX } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
