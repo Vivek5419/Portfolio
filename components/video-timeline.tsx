@@ -4,24 +4,34 @@ import type React from "react"
 
 import { useRef, useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
+import { motion, AnimatePresence, useSpring } from "framer-motion"
 
 interface VideoTimelineProps {
   currentTime: number
   duration: number
   onSeek: (time: number) => void
   className?: string
-  markers?: Array<{ time: number; label: string }>
 }
 
-export default function VideoTimeline({ currentTime, duration, onSeek, className, markers = [] }: VideoTimelineProps) {
+export default function VideoTimeline({ currentTime, duration, onSeek, className }: VideoTimelineProps) {
   const timelineRef = useRef<HTMLDivElement>(null)
-  const progressRef = useRef<HTMLDivElement>(null)
-  const handleRef = useRef<HTMLDivElement>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [isHovering, setIsHovering] = useState(false)
   const [hoverPosition, setHoverPosition] = useState<number | null>(null)
 
-  // Calculate progress percentage
-  const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0
+  // Use spring animation for smoother progress updates
+  const springProgress = useSpring(0, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  })
+
+  // Update spring value when currentTime changes
+  useEffect(() => {
+    if (duration > 0) {
+      springProgress.set((currentTime / duration) * 100)
+    }
+  }, [currentTime, duration, springProgress])
 
   // Format time as MM:SS
   const formatTime = (time: number) => {
@@ -30,78 +40,88 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
     return `${minutes}:${seconds.toString().padStart(2, "0")}`
   }
 
-  // Get position from mouse/touch event with bounds checking
-  const getPositionFromEvent = (clientX: number) => {
-    if (!timelineRef.current) return 0
+  // Calculate time for hover preview
+  const getTimeForPosition = (position: number) => {
+    return Math.max(0, Math.min(position * duration, duration))
+  }
+
+  // Handle mouse/touch events
+  const handleInteraction = (clientX: number) => {
+    if (!timelineRef.current) return
 
     const rect = timelineRef.current.getBoundingClientRect()
     const position = (clientX - rect.left) / rect.width
-    return Math.max(0, Math.min(position, 1))
+    const newTime = getTimeForPosition(position)
+    onSeek(newTime)
   }
 
-  // Handle mouse/touch down
-  const handlePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault()
+  const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true)
-
-    // Get clientX from either mouse or touch event
-    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX
-    const position = getPositionFromEvent(clientX)
-
-    // Update time based on position
-    onSeek(position * duration)
+    handleInteraction(e.clientX)
   }
 
-  // Handle mouse/touch move
-  const handlePointerMove = (e: MouseEvent | TouchEvent) => {
-    if (!isDragging) return
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const rect = timelineRef.current?.getBoundingClientRect()
+    if (!rect) return
 
-    // Get clientX from either mouse or touch event
-    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX
-    const position = getPositionFromEvent(clientX)
+    const position = (e.clientX - rect.left) / rect.width
+    setHoverPosition(position)
 
-    // Update time based on position
-    onSeek(position * duration)
-
-    // Prevent default to avoid text selection and page scrolling
-    e.preventDefault()
+    if (isDragging) {
+      handleInteraction(e.clientX)
+    }
   }
 
-  // Handle mouse/touch up
-  const handlePointerUp = () => {
+  const handleMouseUp = () => {
     setIsDragging(false)
   }
 
-  // Handle hover
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging) return
-    const position = getPositionFromEvent(e.clientX)
-    setHoverPosition(position)
+  const handleMouseLeave = () => {
+    setHoverPosition(null)
+    setIsHovering(false)
   }
 
-  // Handle mouse leave
-  const handleMouseLeave = () => {
-    if (!isDragging) {
-      setHoverPosition(null)
+  const handleMouseEnter = () => {
+    setIsHovering(true)
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault() // Prevent scrolling while touching the timeline
+    setIsDragging(true)
+    handleInteraction(e.touches[0].clientX)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isDragging) {
+      e.preventDefault() // Prevent scrolling while dragging
+      handleInteraction(e.touches[0].clientX)
     }
+  }
+
+  const handleTouchEnd = () => {
+    setIsDragging(false)
   }
 
   // Add/remove document-level event listeners
   useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      setIsDragging(false)
+    }
+
+    const handleGlobalTouchEnd = () => {
+      setIsDragging(false)
+    }
+
     if (isDragging) {
-      document.addEventListener("mousemove", handlePointerMove)
-      document.addEventListener("touchmove", handlePointerMove, { passive: false })
-      document.addEventListener("mouseup", handlePointerUp)
-      document.addEventListener("touchend", handlePointerUp)
+      document.addEventListener("mouseup", handleGlobalMouseUp)
+      document.addEventListener("touchend", handleGlobalTouchEnd)
     }
 
     return () => {
-      document.removeEventListener("mousemove", handlePointerMove)
-      document.removeEventListener("touchmove", handlePointerMove)
-      document.removeEventListener("mouseup", handlePointerUp)
-      document.removeEventListener("touchend", handlePointerUp)
+      document.removeEventListener("mouseup", handleGlobalMouseUp)
+      document.removeEventListener("touchend", handleGlobalTouchEnd)
     }
-  }, [isDragging, duration])
+  }, [isDragging])
 
   return (
     <div className={cn("relative select-none", className)}>
@@ -111,72 +131,66 @@ export default function VideoTimeline({ currentTime, duration, onSeek, className
       </div>
 
       {/* Timeline container */}
-      <div
+      <motion.div
         ref={timelineRef}
-        className={cn("relative h-2 bg-white/10 rounded-full overflow-hidden cursor-pointer", isDragging && "h-3")}
-        style={{ touchAction: "none" }}
-        onMouseDown={handlePointerDown}
-        onTouchStart={handlePointerDown}
+        className={cn(
+          "group relative h-1.5 bg-white/20 rounded-full overflow-hidden cursor-pointer touch-none",
+          isDragging && "h-2.5",
+          isHovering && "h-2.5",
+        )}
+        onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        onMouseEnter={handleMouseEnter}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        whileHover={{ height: 10 }}
+        animate={{ height: isDragging ? 10 : 6 }}
+        transition={{ duration: 0.2 }}
       >
-        {/* Blurred background progress bar */}
-        <div
-          ref={progressRef}
-          className="absolute inset-0 backdrop-blur-sm bg-white/20 rounded-full origin-left z-10"
-          style={{ width: `${progressPercentage}%` }}
+        {/* Progress bar with spring animation */}
+        <motion.div
+          className={cn(
+            "absolute inset-0 bg-red-600 rounded-full origin-left",
+            (isHovering || isDragging) && "bg-red-500",
+          )}
+          style={{ width: springProgress }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
         />
 
-        {/* Colored progress bar */}
-        <div
-          className="absolute inset-0 bg-red-500/70 rounded-full origin-left z-20"
-          style={{ width: `${progressPercentage}%` }}
-        />
-
-        {/* Scrubber handle */}
-        <div
-          ref={handleRef}
-          className="absolute top-1/2 h-4 w-4 bg-red-500 rounded-full -translate-y-1/2 z-30"
-          style={{
-            left: `${progressPercentage}%`,
-            transform: `translateX(-50%) translateY(-50%)`,
-            boxShadow: "0 0 0 2px rgba(255, 255, 255, 0.3)",
-          }}
-        />
-
-        {/* Hover position indicator */}
-        {hoverPosition !== null && !isDragging && (
-          <>
-            <div
-              className="absolute top-0 bottom-0 w-0.5 bg-white/70 z-40"
+        {/* Hover preview line */}
+        <AnimatePresence>
+          {hoverPosition !== null && (
+            <motion.div
+              className="absolute top-0 left-0 h-full w-0.5 bg-white/70"
               style={{ left: `${hoverPosition * 100}%` }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
             />
-            <div
-              className="absolute -top-8 px-2 py-1 bg-black/90 text-white text-xs rounded pointer-events-none z-50"
-              style={{
-                left: `${hoverPosition * 100}%`,
-                transform: "translateX(-50%)",
-              }}
-            >
-              {formatTime(hoverPosition * duration)}
-            </div>
-          </>
-        )}
+          )}
+        </AnimatePresence>
+      </motion.div>
 
-        {/* Markers */}
-        {markers.map((marker, index) => {
-          const markerPosition = (marker.time / duration) * 100
-          return (
-            <div
-              key={index}
-              className="absolute top-0 bottom-0 w-0.5 bg-yellow-500 z-15"
-              style={{ left: `${markerPosition}%` }}
-              title={marker.label}
-            />
-          )
-        })}
-      </div>
+      {/* Preview time tooltip */}
+      <AnimatePresence>
+        {hoverPosition !== null && (
+          <motion.div
+            className="absolute -top-10 px-2 py-1 bg-black/90 rounded text-xs text-white transform -translate-x-1/2 pointer-events-none"
+            style={{ left: `${hoverPosition * 100}%` }}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 5 }}
+            transition={{ duration: 0.2 }}
+          >
+            {formatTime(getTimeForPosition(hoverPosition))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
+              
