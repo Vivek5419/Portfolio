@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react"
 import VideoTimeline from "./video-timeline"
 import { Play, Pause, Volume2, VolumeX } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface VideoPlayerProps {
   src: string
@@ -16,6 +17,7 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
   const [isMuted, setIsMuted] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
+  const [isHovering, setIsHovering] = useState(false)
 
   // Example markers (you can customize these)
   const markers = [
@@ -83,16 +85,32 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
   }, [])
 
   return (
-    <div className="relative group">
+    <motion.div
+      className="relative rounded-lg overflow-hidden"
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+      whileHover={{ scale: 1.01 }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+    >
       {/* Video */}
-      <video ref={videoRef} className="w-full rounded-lg" poster={poster} playsInline>
+      <video ref={videoRef} className="w-full rounded-lg" poster={poster} playsInline onClick={togglePlay}>
         <source src={src} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 
       {/* Controls overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="absolute bottom-0 left-0 right-0 p-4">
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isHovering || isPlaying ? 1 : 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <motion.div
+          className="absolute bottom-0 left-0 right-0 p-4"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: isHovering ? 0 : 10, opacity: isHovering ? 1 : 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
           {/* Timeline */}
           <VideoTimeline
             currentTime={currentTime}
@@ -105,16 +123,60 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
           {/* Control buttons */}
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={togglePlay} className="text-white hover:bg-white/20">
-              {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+              <AnimatePresence mode="wait">
+                {isPlaying ? (
+                  <motion.div
+                    key="pause"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.8, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <Pause className="h-6 w-6" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="play"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.8, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <Play className="h-6 w-6" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </Button>
 
             <Button variant="ghost" size="icon" onClick={toggleMute} className="text-white hover:bg-white/20">
-              {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+              <AnimatePresence mode="wait">
+                {isMuted ? (
+                  <motion.div
+                    key="muted"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.8, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <VolumeX className="h-6 w-6" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="volume"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.8, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <Volume2 className="h-6 w-6" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </Button>
           </div>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   )
 }
 
