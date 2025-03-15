@@ -72,19 +72,20 @@ export default function VideoShowcase() {
   // Timer ref for updating progress
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Define your videos here with explicit poster images
+  // Updated videos array with new image URLs
   const videos = [
     {
       id: 0,
       title: "Main Showcase",
       src: "/videos/main-showcase.mp4",
-      poster: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Useless-WAS3ERoM05tL633OiHEjDiWcOtps8I.png",
+      poster: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Main.jpg-R3NSDpzS3gKOKRIT7GHHyFK3nef3lh.jpeg", // Updated to Main.jpg
     },
     {
       id: 1,
       title: "Season 08 Episode 02",
       src: "/videos/short-sample-1.mp4",
-      poster: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/1.jpg-DZbIjLB65U3yTFBAkCF4rxJM024FI2.jpeg",
+      poster:
+        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/1%28new%29.jpg-3xJk3wzOVOYbnDmGm5JITFhXJXHop5.jpeg", // Updated to 1(new).jpg
     },
     {
       id: 2,
@@ -516,4 +517,4 @@ export default function VideoShowcase() {
   )
 }
 
-                
+                        
