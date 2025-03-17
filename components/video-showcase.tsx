@@ -546,4 +546,97 @@ export default function VideoShowcase() {
                             newStates[index] = { ...newStates[index], isPlaying: true }
                             return newStates
                           })
-                
+                        }}
+                        onPause={() => {
+                          setThumbnailStates((prev) => {
+                            const newStates = [...prev]
+                            newStates[index] = { ...newStates[index], isPlaying: false }
+                            return newStates
+                          })
+                        }}
+                        onTimeUpdate={() => {
+                          const videoRef = thumbnailRefs.current[index]
+                          if (videoRef) {
+                            setThumbnailStates((prev) => {
+                              const newStates = [...prev]
+                              newStates[index] = {
+                                ...newStates[index],
+                                currentTime: videoRef.currentTime,
+                                duration: videoRef.duration || 0,
+                              }
+                              return newStates
+                            })
+                          }
+                        }}
+                        onLoadedMetadata={() => {
+                          const videoRef = thumbnailRefs.current[index]
+                          if (videoRef) {
+                            setThumbnailStates((prev) => {
+                              const newStates = [...prev]
+                              newStates[index] = {
+                                ...newStates[index],
+                                duration: videoRef.duration || 0,
+                              }
+                              return newStates
+                            })
+                          }
+                        }}
+                        onWaiting={() => {
+                          setThumbnailStates((prev) => {
+                            const newStates = [...prev]
+                            newStates[index] = { ...newStates[index], isBuffering: true }
+                            return newStates
+                          })
+                        }}
+                        onPlaying={() => {
+                          setThumbnailStates((prev) => {
+                            const newStates = [...prev]
+                            newStates[index] = { ...newStates[index], isBuffering: false }
+                            return newStates
+                          })
+                        }}
+                      >
+                        <source src={video.src} type="video/mp4" />
+                      </motion.video>
+
+                      {/* Thumbnail video controls with timeline */}
+                      <VideoControls
+                        isPlaying={thumbnailStates[index].isPlaying}
+                        isMuted={thumbnailStates[index].isMuted}
+                        currentTime={thumbnailStates[index].currentTime}
+                        duration={thumbnailStates[index].duration}
+                        onPlayPause={(e) => toggleThumbnailPlay(index, e)}
+                        onMuteToggle={(e) => toggleThumbnailMute(index, e)}
+                        onSeek={(time) => {
+                          const videoRef = thumbnailRefs.current[index]
+                          if (videoRef) {
+                            videoRef.currentTime = time
+                          }
+                        }}
+                        isBuffering={thumbnailStates[index].isBuffering}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* New section stating videos are edited by me */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            viewport={{ once: true }}
+            className="mt-8 text-center"
+          >
+            <div className="apple-blur-light rounded-3xl border border-zinc-800/30 overflow-hidden p-4 apple-glow">
+              <p className="text-lg text-gray-300">All these videos are edited by me</p>
+            </div>
+          </motion.div>
+        </div>
+      </motion.div>
+    </section>
+  )
+}
+
