@@ -1,19 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useRef, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Play, Pause, Volume2, VolumeX } from "lucide-react"
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
-import VideoTimeline from "./video-timeline"
-
-// Video controls component with timeline
-const VideoControls = ({
-  isPlaying,
-  isMuted,
-  currentTime,
-  duration,
+import type React
   onPlayPause,
   onMuteToggle,
   onSeek,
