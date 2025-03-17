@@ -604,4 +604,24 @@ button {
   transform: scale(0.95);
 }
 
-                                      
+/* iOS 18-style loading animation */
+@keyframes ios-spinner {
+  0% {
+    stroke-dasharray: 1, 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -35;
+  }
+  100% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -124;
+  }
+}
+
+.animate-ios-spinner {
+  animation: ios-spinner 1.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
