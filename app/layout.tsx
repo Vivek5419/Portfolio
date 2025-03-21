@@ -69,6 +69,15 @@ export default function RootLayout({
           video {
             background-color: #1a1a1a;
           }
+
+          /* Force blur effects for loading animation */
+          .loading-blur-background {
+            -webkit-backdrop-filter: blur(15px) !important;
+            backdrop-filter: blur(15px) !important;
+            transform: translateZ(0);
+            will-change: backdrop-filter;
+            backface-visibility: hidden;
+          }
         `,
           }}
         />
@@ -108,6 +117,16 @@ export default function RootLayout({
                 video.preload = "none";
                 video.load();
               });
+
+              // Force repaint for loading animation blur backgrounds
+              const loadingBlurs = document.querySelectorAll('.loading-blur-background');
+              loadingBlurs.forEach(function(element) {
+                // Force a repaint by temporarily modifying a property
+                element.style.opacity = '0.99';
+                setTimeout(function() {
+                  element.style.opacity = '1';
+                }, 0);
+              });
             });
           `}
         </Script>
@@ -118,3 +137,4 @@ export default function RootLayout({
     </html>
   )
 }
+
