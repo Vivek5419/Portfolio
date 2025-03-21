@@ -44,7 +44,7 @@ const VideoControls = ({
           className="text-white hover:bg-transparent focus:bg-transparent relative z-10"
           disabled={isBuffering}
         >
-          <div className="absolute inset-0 bg-black/20 backdrop-blur-md rounded-full -z-10"></div>
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-xl rounded-full -z-10"></div>
           <AnimatePresence mode="wait">
             {isBuffering ? (
               <motion.div
@@ -53,10 +53,11 @@ const VideoControls = ({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className="relative"
+                className="loading-animation-container relative"
               >
-                <div className="absolute inset-0 bg-black/20 backdrop-blur-md rounded-full -z-10"></div>
-                <svg className="w-6 h-6" viewBox="0 0 50 50">
+                {/* Enhanced blurred background for loading animation */}
+                <div className="absolute inset-0 bg-black/50 backdrop-blur-xl rounded-full -z-10 loading-blur-background"></div>
+                <svg className="w-6 h-6 relative z-10" viewBox="0 0 50 50">
                   <circle
                     cx="25"
                     cy="25"
@@ -76,7 +77,7 @@ const VideoControls = ({
                 key="pause"
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
+                exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               >
                 <Pause className="h-6 w-6" />
@@ -86,7 +87,7 @@ const VideoControls = ({
                 key="play"
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
+                exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               >
                 <Play className="h-6 w-6" />
@@ -102,30 +103,28 @@ const VideoControls = ({
           onClick={onMuteToggle}
           className="text-white hover:bg-transparent focus:bg-transparent relative z-10"
         >
-          <div className="absolute inset-0 bg-black/20 backdrop-blur-md rounded-full -z-10"></div>
-          <AnimatePresence mode="wait">
-            {isMuted ? (
-              <motion.div
-                key="muted"
-                initial={{ scale: 0.8, opacity: 0, rotate: -10 }}
-                animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              >
-                <VolumeX className="h-6 w-6" />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="volume"
-                initial={{ scale: 0.8, opacity: 0, rotate: 10 }}
-                animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              >
-                <Volume2 className="h-6 w-6" />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-xl rounded-full -z-10"></div>
+
+          {/* iOS-style volume transition - both icons are always present with crossfade */}
+          <div className="relative h-6 w-6 flex items-center justify-center">
+            <motion.div
+              initial={{ opacity: isMuted ? 1 : 0 }}
+              animate={{ opacity: isMuted ? 1 : 0 }}
+              transition={{ duration: 0.15, ease: "easeInOut" }}
+              className="absolute inset-0 flex items-center justify-center"
+            >
+              <VolumeX className="h-6 w-6" />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: isMuted ? 0 : 1 }}
+              animate={{ opacity: isMuted ? 0 : 1 }}
+              transition={{ duration: 0.15, ease: "easeInOut" }}
+              className="absolute inset-0 flex items-center justify-center"
+            >
+              <Volume2 className="h-6 w-6" />
+            </motion.div>
+          </div>
         </Button>
       </motion.div>
     </div>
