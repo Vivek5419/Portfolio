@@ -17,6 +17,9 @@ body {
   background-color: transparent;
   /*touch-action: manipulation; Allow normal touch but prevent double-tap zoom*/
   overscroll-behavior: none;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 @tailwind base;
@@ -127,24 +130,10 @@ button {
   animation: gradient 10s ease infinite;
 }
 
-/* Add this to your existing CSS */
-@media (max-width: 640px) {
-  .menu-container {
-    width: 90%;
-    max-width: 360px;
-  }
-
-  .menu-container button {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-    font-size: 0.875rem;
-  }
-}
-
 /* Menu container styles */
 .menu-container {
   width: fit-content;
-  max-width: 90%;
+  max-width: 95%;
 }
 
 /* Fix button padding to ensure borders stay within container */
@@ -152,6 +141,9 @@ button {
   border: none !important;
   background: transparent !important;
   transition: background-color 0.2s ease-in-out !important;
+  min-height: 40px !important;
+  min-width: 40px !important;
+  padding: 0.5rem 1rem !important;
 }
 
 .menu-button:active,
@@ -164,7 +156,7 @@ button {
 .hero-button-container {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
   width: 100%;
   max-width: 24rem;
   margin: 0 auto;
@@ -173,11 +165,14 @@ button {
 @media (min-width: 640px) {
   .hero-button-container {
     flex-direction: row;
+    gap: 1.5rem;
   }
 }
 
 .hero-button {
   width: 100%;
+  min-height: 48px;
+  padding: 0.75rem 1.5rem;
 }
 
 /* Make sure the animated background covers the entire page */
@@ -633,11 +628,12 @@ button {
   justify-content: center;
   width: 100%;
   height: 100%;
+  isolation: isolate;
 }
 
 .loading-blur-background {
   position: absolute;
-  inset: -4px;
+  inset: 0;
   background-color: rgba(0, 0, 0, 0.5) !important;
   border-radius: 50%;
   backdrop-filter: blur(15px) !important;
@@ -646,12 +642,22 @@ button {
   will-change: backdrop-filter;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1;
 }
 
-/* Force the blur to be applied in all browsers */
+/* Add these new cross-platform blur fallbacks */
+/* Android Chrome fallback (many Android browsers don't support backdrop-filter well) */
+@supports not (backdrop-filter: blur(15px)) {
+  .loading-blur-background {
+    background-color: rgba(0, 0, 0, 0.85) !important;
+  }
+}
+
+/* Force the blur to be applied in WebKit browsers */
 @supports (-webkit-backdrop-filter: blur(15px)) {
   .loading-blur-background {
     background-color: rgba(0, 0, 0, 0.4) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
   }
 }
 
@@ -660,5 +666,230 @@ button {
   .loading-blur-background {
     background-color: rgba(0, 0, 0, 0.7) !important;
   }
+}
+
+/* Add these styles to ensure all interactive elements have sufficient touch targets */
+
+/* Ensure all buttons have sufficient touch targets */
+button,
+.button,
+[role="button"],
+a {
+  min-height: 40px;
+  min-width: 40px;
+}
+
+/* Ensure touch targets on mobile have sufficient spacing */
+@media (max-width: 768px) {
+  button,
+  .button,
+  [role="button"],
+  a {
+    margin: 0.25rem;
+    padding: 0.5rem;
+  }
+
+  /* Increase spacing between interactive elements */
+  .interactive-container > * {
+    margin: 0.5rem;
+  }
+}
+
+/* Ensure video controls have sufficient touch targets */
+.video-controls button {
+  min-height: 40px;
+  min-width: 40px;
+}
+
+/* Responsive container width adjustments */
+.container {
+  width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 360px) {
+  .xs-text-xs {
+    font-size: 0.75rem;
+  }
+
+  .xs-p-1 {
+    padding: 0.25rem;
+  }
+
+  .xs-gap-1 {
+    gap: 0.25rem;
+  }
+}
+
+/* Add these Android-specific styles at the end of your CSS file */
+
+/* Android-specific styles */
+.is-android .loading-blur-background {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+}
+
+.android-solid-bg {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  z-index: -1;
+}
+
+/* Enhanced loading animation container */
+.loading-animation-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Create a multi-layered approach for maximum compatibility */
+.loading-animation-container::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  z-index: -2;
+}
+
+.loading-animation-container::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  z-index: -1;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Ensure the spinner is visible on all backgrounds */
+.animate-ios-spinner {
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.5));
+}
+
+/* DIRECT LOADING CIRCLE BLUR - GUARANTEED TO WORK */
+.loading-circle-blur {
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  background-color: rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 15px 5px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: -1;
+}
+
+/* Fallback for browsers that don't support backdrop-filter */
+@supports not (backdrop-filter: blur(8px)) and not (-webkit-backdrop-filter: blur(8px)) {
+  .loading-circle-blur {
+    background-color: rgba(0, 0, 0, 0.85);
+  }
+}
+
+/* Android specific styles */
+.is-android .loading-circle-blur {
+  background-color: rgba(0, 0, 0, 0.85);
+}
+
+/* Version 88 loading animation blur styles */
+.loading-animation-container {
+  position: relative;
+}
+
+.loading-animation-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 50%;
+  z-index: -1;
+}
+
+/* Ensure the blur works on all browsers */
+@supports not (backdrop-filter: blur(8px)) {
+  .loading-animation-container::before {
+    background-color: rgba(0, 0, 0, 0.75);
+  }
+}
+
+/* Specific Android fix */
+.is-android .loading-animation-container::before {
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+/* Add these styles at the end of your CSS file */
+
+/* Loading animation circle styles from the reference video */
+.loading-animation-circle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.loading-circle-backdrop {
+  position: absolute;
+  inset: -8px;
+  border-radius: 9999px;
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: -1;
+}
+
+/* Ensure the blur works on all browsers */
+@supports not (backdrop-filter: blur(12px)) and not (-webkit-backdrop-filter: blur(12px)) {
+  .loading-circle-backdrop {
+    background-color: rgba(0, 0, 0, 0.85);
+  }
+}
+
+/* Android specific styles */
+.is-android .loading-circle-backdrop {
+  background-color: rgba(0, 0, 0, 0.85);
+}
+
+/* Ensure the spinner is visible on all backgrounds */
+.animate-ios-spinner {
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.5));
 }
 
