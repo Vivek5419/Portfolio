@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Play, Pause, Volume2, VolumeX } from "lucide-react"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import VideoTimeline from "./video-timeline"
-import { useMediaQuery } from "@/hooks/use-media-query"
 
 // Video controls component with timeline
 const VideoControls = ({
@@ -19,7 +18,6 @@ const VideoControls = ({
   onMuteToggle,
   onSeek,
   isBuffering,
-  isMobile,
 }: {
   isPlaying: boolean
   isMuted: boolean
@@ -29,22 +27,21 @@ const VideoControls = ({
   onMuteToggle: (e: React.MouseEvent) => void
   onSeek: (time: number) => void
   isBuffering?: boolean
-  isMobile?: boolean
 }) => (
   <motion.div
-    className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 bg-gradient-to-t from-black to-transparent"
+    className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent"
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.3 }}
   >
     <VideoTimeline currentTime={currentTime} duration={duration} onSeek={onSeek} className="mb-2" />
-    <div className="flex items-center justify-between gap-2 sm:gap-4">
+    <div className="flex items-center justify-between gap-4">
       <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} className="relative">
         <Button
           variant="ghost"
-          size={isMobile ? "sm" : "icon"}
+          size="icon"
           onClick={onPlayPause}
-          className="text-white hover:bg-transparent focus:bg-transparent relative z-10 h-10 w-10 sm:h-12 sm:w-12 min-h-[40px] min-w-[40px] sm:min-h-[48px] sm:min-w-[48px]"
+          className="text-white hover:bg-transparent focus:bg-transparent relative z-10 h-12 w-12 min-h-[48px] min-w-[48px]"
           disabled={isBuffering}
         >
           <div className="absolute inset-0 bg-black/30 backdrop-blur-xl rounded-full -z-10"></div>
@@ -56,10 +53,11 @@ const VideoControls = ({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className="loading-animation-circle"
+                className="loading-animation-container relative"
               >
-                <div className="loading-circle-backdrop"></div>
-                <svg className={`${isMobile ? "w-5 h-5" : "w-6 h-6"} relative z-10`} viewBox="0 0 50 50">
+                {/* Enhanced blurred background for loading animation */}
+                <div className="absolute inset-0 bg-black/50 backdrop-blur-xl rounded-full -z-10 loading-blur-background"></div>
+                <svg className="w-6 h-6 relative z-10" viewBox="0 0 50 50">
                   <circle
                     cx="25"
                     cy="25"
@@ -82,7 +80,7 @@ const VideoControls = ({
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               >
-                <Pause className={`${isMobile ? "h-5 w-5" : "h-6 w-6"}`} />
+                <Pause className="h-6 w-6" />
               </motion.div>
             ) : (
               <motion.div
@@ -92,7 +90,7 @@ const VideoControls = ({
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               >
-                <Play className={`${isMobile ? "h-5 w-5" : "h-6 w-6"}`} />
+                <Play className="h-6 w-6" />
               </motion.div>
             )}
           </AnimatePresence>
@@ -101,21 +99,21 @@ const VideoControls = ({
       <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} className="relative">
         <Button
           variant="ghost"
-          size={isMobile ? "sm" : "icon"}
+          size="icon"
           onClick={onMuteToggle}
-          className="text-white hover:bg-transparent focus:bg-transparent relative z-10 h-10 w-10 sm:h-12 sm:w-12 min-h-[40px] min-w-[40px] sm:min-h-[48px] sm:min-w-[48px]"
+          className="text-white hover:bg-transparent focus:bg-transparent relative z-10 h-12 w-12 min-h-[48px] min-w-[48px]"
         >
           <div className="absolute inset-0 bg-black/30 backdrop-blur-xl rounded-full -z-10"></div>
 
           {/* iOS-style volume transition - both icons are always present with crossfade */}
-          <div className="relative h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center">
+          <div className="relative h-6 w-6 flex items-center justify-center">
             <motion.div
               initial={{ opacity: isMuted ? 1 : 0 }}
               animate={{ opacity: isMuted ? 1 : 0 }}
               transition={{ duration: 0.15, ease: "easeInOut" }}
               className="absolute inset-0 flex items-center justify-center"
             >
-              <VolumeX className={`${isMobile ? "h-5 w-5" : "h-6 w-6"}`} />
+              <VolumeX className="h-6 w-6" />
             </motion.div>
 
             <motion.div
@@ -124,7 +122,7 @@ const VideoControls = ({
               transition={{ duration: 0.15, ease: "easeInOut" }}
               className="absolute inset-0 flex items-center justify-center"
             >
-              <Volume2 className={`${isMobile ? "h-5 w-5" : "h-6 w-6"}`} />
+              <Volume2 className="h-6 w-6" />
             </motion.div>
           </div>
         </Button>
@@ -134,10 +132,6 @@ const VideoControls = ({
 )
 
 export default function VideoShowcase() {
-  // Media queries for responsive design
-  const isMobile = useMediaQuery("(max-width: 640px)")
-  const isSmallMobile = useMediaQuery("(max-width: 360px)")
-
   // Track state for each video separately
   const [mainVideoState, setMainVideoState] = useState({
     isPlaying: false,
@@ -390,18 +384,11 @@ export default function VideoShowcase() {
     }
   }
 
-  // Calculate the max width for the main video based on aspect ratio
-  const getMainVideoMaxWidth = () => {
-    if (isSmallMobile) return "95vw"
-    if (isMobile) return "90vw"
-    return "405px" // Default max width for desktop
-  }
-
   return (
-    <section id="showcase" ref={sectionRef} className="py-12 sm:py-20 overflow-hidden">
-      <motion.div className="container px-2 sm:px-4 md:px-6" style={{ opacity, y }}>
+    <section id="showcase" ref={sectionRef} className="py-20 overflow-hidden">
+      <motion.div className="container px-4 md:px-6" style={{ opacity, y }}>
         <motion.h2
-          className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-8 sm:mb-12"
+          className="text-3xl md:text-4xl font-bold text-center mb-12"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -422,7 +409,7 @@ export default function VideoShowcase() {
           >
             <div className="apple-blur-heavy rounded-3xl border border-zinc-800/30 overflow-hidden apple-glow">
               <div className="p-0 relative">
-                <div className="aspect-[9/16] w-full mx-auto" style={{ maxWidth: getMainVideoMaxWidth() }}>
+                <div className="aspect-[9/16] w-full max-w-[405px] mx-auto">
                   <motion.video
                     ref={mainVideoRef}
                     className="w-full h-full object-cover"
@@ -492,13 +479,12 @@ export default function VideoShowcase() {
                     }
                   }}
                   isBuffering={mainVideoState.isBuffering}
-                  isMobile={isMobile}
                 />
               </div>
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-4 mt-4 sm:mt-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
             {videos.slice(1, 4).map((video, index) => (
               <motion.div
                 key={video.id}
@@ -604,8 +590,7 @@ export default function VideoShowcase() {
                         onPlaying={() => {
                           setThumbnailStates((prev) => {
                             const newStates = [...prev]
-                            const newstates = { ...newStates[index], isBuffering: false }
-                            newStates[index] = newstates
+                            newStates[index] = { ...newStates[index], isBuffering: false }
                             return newStates
                           })
                         }}
@@ -628,7 +613,6 @@ export default function VideoShowcase() {
                           }
                         }}
                         isBuffering={thumbnailStates[index].isBuffering}
-                        isMobile={isMobile}
                       />
                     </div>
                   </div>
@@ -643,10 +627,10 @@ export default function VideoShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
             viewport={{ once: true }}
-            className="mt-4 sm:mt-8 text-center"
+            className="mt-8 text-center"
           >
-            <div className="apple-blur-light rounded-3xl border border-zinc-800/30 overflow-hidden p-3 sm:p-4 apple-glow">
-              <p className="text-base sm:text-lg text-gray-300">All these videos are edited by me</p>
+            <div className="apple-blur-light rounded-3xl border border-zinc-800/30 overflow-hidden p-4 apple-glow">
+              <p className="text-lg text-gray-300">All these videos are edited by me</p>
             </div>
           </motion.div>
         </div>
