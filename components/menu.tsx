@@ -4,13 +4,10 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
-import { useMediaQuery } from "@/hooks/use-media-query"
 
 export default function Menu() {
   const [activeButton, setActiveButton] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
-  const isMobile = useMediaQuery("(max-width: 640px)")
-  const isSmallMobile = useMediaQuery("(max-width: 360px)")
 
   // Ensure component is mounted before applying animations
   useEffect(() => {
@@ -34,14 +31,14 @@ export default function Menu() {
 
   return (
     <motion.nav
-      className="fixed top-4 left-0 right-0 mx-auto z-50 menu-container"
+      className="fixed top-4 left-0 right-0 mx-auto w-fit z-50 menu-container"
       initial={{ y: -50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      style={{ isolation: "isolate", width: "fit-content", maxWidth: "95%" }}
+      style={{ isolation: "isolate" }}
     >
-      <div className="menu-backdrop px-3 sm:px-6 py-2 sm:py-3 apple-glow">
-        <div className={`flex items-center justify-center ${isSmallMobile ? "gap-1" : isMobile ? "gap-2" : "gap-4"}`}>
+      <div className="menu-backdrop px-6 py-3 apple-glow">
+        <div className="flex items-center justify-center space-x-6 sm:space-x-8">
           {menuItems.map((item) => (
             <motion.div
               key={item.id}
@@ -61,16 +58,11 @@ export default function Menu() {
               <Button
                 asChild
                 variant="ghost"
-                size={isSmallMobile ? "xs" : isMobile ? "sm" : "default"}
-                className="text-white menu-button"
+                size="sm"
+                className="text-white menu-button min-h-[40px] min-w-[40px] px-4 py-2"
                 onClick={() => handleButtonClick(item.id)}
               >
-                <Link
-                  href={item.href}
-                  className={isSmallMobile ? "text-xs px-1.5 py-1" : isMobile ? "text-sm px-2 py-1.5" : "px-4 py-2"}
-                >
-                  {item.label}
-                </Link>
+                <Link href={item.href}>{item.label}</Link>
               </Button>
             </motion.div>
           ))}
