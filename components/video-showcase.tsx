@@ -10,7 +10,7 @@ import VideoTimeline from "./video-timeline"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
 // Video controls component with timeline
-const VideoControls 
+const VideoControls = ({
   isPlaying,
   isMuted,
   currentTime,
