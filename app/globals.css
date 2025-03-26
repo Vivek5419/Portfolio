@@ -1,4 +1,4 @@
-html,
+htm,
 body {
   /*touch-action: pan-x pan-y;
 -webkit-touch-callout: none;
@@ -8,7 +8,7 @@ overscroll-behavior: none;*/
 }
 
 html {
-  scroll-behavior: smooth;
+  scrol-behavior: smooth;
   -webkit-text-size-adjust: 100%;
   overscroll-behavior: none;
 }
