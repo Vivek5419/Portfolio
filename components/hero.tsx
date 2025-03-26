@@ -113,10 +113,11 @@ export default function Hero() {
           animate="visible"
           custom={2}
           className="hero-button-container"
+          style={{ gap: "16px" }}
         >
           <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap" className="w-full">
-            <Button size="lg" onClick={handleButtonClick} className="w-full hero-button">
-              <a href="#showcase" className="flex items-center justify-center w-full">
+            <Button size="lg" onClick={handleButtonClick} className="w-full hero-button min-h-[48px] px-6">
+              <a href="#showcase" className="flex items-center justify-center w-full py-2">
                 Check out my Work!{" "}
                 <motion.div
                   className="ml-2 inline-flex"
@@ -131,8 +132,8 @@ export default function Hero() {
           </motion.div>
 
           <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap" className="w-full">
-            <Button size="lg" variant="outline" className="w-full hero-button">
-              <a href="mailto:vivek.5419kumar@gmail.com" className="flex items-center justify-center w-full">
+            <Button size="lg" variant="outline" className="w-full hero-button min-h-[48px] px-6">
+              <a href="mailto:vivek.5419kumar@gmail.com" className="flex items-center justify-center w-full py-2">
                 Contact Me
               </a>
             </Button>
