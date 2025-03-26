@@ -80,18 +80,9 @@ export default function RootLayout({
           .loading-blur-background {
             -webkit-backdrop-filter: blur(15px) !important;
             backdrop-filter: blur(15px) !important;
-            background-color: rgba(0, 0, 0, 0.5) !important;
             transform: translateZ(0);
             will-change: backdrop-filter;
             backface-visibility: hidden;
-            border-radius: 50%;
-          }
-
-          /* Android fallback */
-          @supports not (backdrop-filter: blur(15px)) and not (-webkit-backdrop-filter: blur(15px)) {
-            .loading-blur-background {
-              background-color: rgba(0, 0, 0, 0.85) !important;
-            }
           }
 
           /* Fix for mobile viewport issues */
@@ -179,99 +170,6 @@ export default function RootLayout({
               // Run on load and resize
               adjustMenuWidth();
               window.addEventListener('resize', adjustMenuWidth);
-
-              // Detect if backdrop-filter is supported
-              const isBackdropFilterSupported = CSS.supports('backdrop-filter', 'blur(15px)') || 
-                                                CSS.supports('-webkit-backdrop-filter', 'blur(15px)');
-
-              // Apply appropriate styles based on browser support
-              const loadingBlurs = document.querySelectorAll('.loading-blur-background');
-              loadingBlurs.forEach(function(element) {
-                if (!isBackdropFilterSupported) {
-                  // If backdrop-filter is not supported (like on many Android browsers)
-                  element.style.backgroundColor = 'rgba(0, 0, 0, 0.85)';
-                } else {
-                  // Force a repaint by temporarily modifying a property
-                  element.style.opacity = '0.99';
-                  setTimeout(function() {
-                    element.style.opacity = '1';
-                  }, 0);
-                }
-              });
-
-              // Add a class to the body to help with CSS targeting
-              document.body.classList.add(isBackdropFilterSupported ? 'supports-backdrop-filter' : 'no-backdrop-filter');
-
-              // Apply specific fixes for the loading circle backdrop
-              const loadingCircleBackdrops = document.querySelectorAll('.loading-circle-backdrop');
-              loadingCircleBackdrops.forEach(function(element) {
-                // Force a repaint by temporarily modifying a property
-                element.style.opacity = '0.99';
-                setTimeout(function() {
-                  element.style.opacity = '1';
-                }, 0);
-              });
-
-              // Detect Android and apply specific class
-              const isAndroid = /Android/i.test(navigator.userAgent);
-              if (isAndroid) {
-                document.body.classList.add('is-android');
-                
-                // Force the loading circle backdrop to work on Android
-                const loadingCircleBackdrops = document.querySelectorAll('.loading-circle-backdrop');
-                loadingCircleBackdrops.forEach(function(element) {
-                  element.style.backgroundColor = 'rgba(0, 0, 0, 0.85)';
-                  element.style.backdropFilter = 'none';
-                  element.style.webkitBackdropFilter = 'none';
-                });
-              }
-
-              // Additional fix for Android Chrome
-              const isAndroidChrome = /Android/i.test(navigator.userAgent) && /Chrome/i.test(navigator.userAgent);
-              if (isAndroidChrome) {
-                document.body.classList.add('is-android');
-                
-                // Apply specific Android fixes
-                const blurElements = document.querySelectorAll('.loading-blur-background');
-                blurElements.forEach(function(element) {
-                  // Enhance the background opacity for Android
-                  element.style.backgroundColor = 'rgba(0, 0, 0, 0.75)';
-                  
-                  // Add an additional solid background layer for Android
-                  const parent = element.parentElement;
-                  if (parent) {
-                    const solidBg = document.createElement('div');
-                    solidBg.className = 'android-solid-bg';
-                    solidBg.style.position = 'absolute';
-                    solidBg.style.inset = '0';
-                    solidBg.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-                    solidBg.style.borderRadius = '50%';
-                    solidBg.style.zIndex = '-1';
-                    parent.insertBefore(solidBg, element);
-                  }
-                });
-              }
-
-              // Version 88 specific fix for loading animation blur
-              const isAndroid = /Android/i.test(navigator.userAgent);
-              if (isAndroid) {
-                document.body.classList.add('is-android');
-                
-                // Apply solid background for Android devices
-                const loadingContainers = document.querySelectorAll('.loading-animation-container');
-                loadingContainers.forEach(function(container) {
-                  // Force the background to be visible on Android
-                  const style = document.createElement('style');
-                  style.textContent = \`
-                    .loading-animation-container::before {
-                      background-color: rgba(0, 0, 0, 0.75) !important;
-                      backdrop-filter: none !important;
-                      -webkit-backdrop-filter: none !important;
-                    }
-                  \`;
-                  document.head.appendChild(style);
-                });
-              }
             });
           `}
         </Script>
