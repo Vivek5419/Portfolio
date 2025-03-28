@@ -155,7 +155,9 @@ export default function VideoShowcase() {
     { isPlaying: false, isMuted: false, currentTime: 0, duration: 0, isBuffering: false },
   ])
 
-  const [activeVideoIndex, setActiveVideoIndex] = useState(0)
+  // Keep track of which video source is currently loaded in the main player
+  const [currentVideoSource, setCurrentVideoSource] = useState(0)
+
   const sectionRef = useRef<HTMLElement>(null)
   const mainVideoRef = useRef<HTMLVideoElement>(null)
   const thumbnailRefs = useRef<(HTMLVideoElement | null)[]>([null, null, null])
@@ -233,17 +235,15 @@ export default function VideoShowcase() {
     }
   }, [])
 
-  // Effect to update the main video source when activeVideoIndex changes
+  // Effect to update only the main video source when currentVideoSource changes
   useEffect(() => {
     if (mainVideoRef.current) {
-      // Update the video source
-      mainVideoRef.current.src = videos[activeVideoIndex].src
-      // Update the poster
-      mainVideoRef.current.poster = videos[activeVideoIndex].poster
+      // Only update the video source, NOT the poster
+      mainVideoRef.current.src = videos[currentVideoSource].src
       // Load the new video
       mainVideoRef.current.load()
     }
-  }, [activeVideoIndex])
+  }, [currentVideoSource])
 
   // Load video metadata on component mount
   useEffect(() => {
@@ -391,13 +391,13 @@ export default function VideoShowcase() {
     })
   }
 
-  // Change the main video
+  // Change the main video source only, not the poster
   const changeMainVideo = (index: number) => {
     // Pause all videos first
     pauseAllVideos()
 
-    // Update the source of the main video
-    setActiveVideoIndex(index + 1) // +1 because thumbnails start at index 1
+    // Update only the source of the main video, not the poster
+    setCurrentVideoSource(index + 1) // +1 because thumbnails start at index 1
   }
 
   // Calculate the max width for the main video based on aspect ratio
@@ -436,7 +436,7 @@ export default function VideoShowcase() {
                   <motion.video
                     ref={mainVideoRef}
                     className="w-full h-full object-cover"
-                    poster={videos[activeVideoIndex].poster}
+                    poster={videos[0].poster} // Always use the first video's poster
                     muted={mainVideoState.isMuted}
                     playsInline
                     preload="auto"
@@ -483,7 +483,7 @@ export default function VideoShowcase() {
                       setMainVideoState((prev) => ({ ...prev, isBuffering: false }))
                     }}
                   >
-                    <source src={videos[activeVideoIndex].src} type="video/mp4" />
+                    <source src={videos[currentVideoSource].src} type="video/mp4" />
                     Your browser does not support the video tag.
                   </motion.video>
                 </div>
