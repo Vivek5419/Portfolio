@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Youtube } from "lucide-react"
 import { RedditIcon } from "@/components/icons/reddit-icon"
 import { motion, useScroll, useTransform } from "framer-motion"
+import { vibrateDevice } from "@/lib/vibration"
 
 export default function Contact() {
   const sectionRef = useRef<HTMLElement>(null)
@@ -53,7 +54,13 @@ export default function Contact() {
               <div className="p-6 pt-0">
                 <div className="flex gap-6 justify-center">
                   <motion.div variants={socialVariants} whileHover="hover">
-                    <Button asChild variant="secondary" size="icon" className="h-12 w-12 min-h-[48px] min-w-[48px]">
+                    <Button
+                      asChild
+                      variant="secondary"
+                      size="icon"
+                      className="h-12 w-12 min-h-[48px] min-w-[48px]"
+                      onClick={() => vibrateDevice(42)}
+                    >
                       <a href="https://m.youtube.com/@vivekthinks" target="_blank" rel="noopener noreferrer">
                         <Youtube className="h-5 w-5" />
                         <span className="sr-only">YouTube</span>
@@ -62,7 +69,13 @@ export default function Contact() {
                   </motion.div>
 
                   <motion.div variants={socialVariants} whileHover="hover">
-                    <Button asChild variant="secondary" size="icon" className="h-12 w-12 min-h-[48px] min-w-[48px]">
+                    <Button
+                      asChild
+                      variant="secondary"
+                      size="icon"
+                      className="h-12 w-12 min-h-[48px] min-w-[48px]"
+                      onClick={() => vibrateDevice(42)}
+                    >
                       <a
                         href="https://www.reddit.com/u/Vivek5419/s/dNM3XZxCNU"
                         target="_blank"
@@ -95,7 +108,7 @@ export default function Contact() {
                   I'm currently available for freelance work. Let's discuss your project!
                 </p>
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                  <Button asChild size="lg" className="w-full min-h-[48px]">
+                  <Button asChild size="lg" className="w-full min-h-[48px]" onClick={() => vibrateDevice(42)}>
                     <a href="mailto:vivek.5419kumar@gmail.com" className="py-2">
                       Email Me Directly
                     </a>
