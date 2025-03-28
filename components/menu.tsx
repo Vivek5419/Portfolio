@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { vibrateDevice } from "@/lib/vibration"
 
 export default function Menu() {
   const [activeButton, setActiveButton] = useState<string | null>(null)
@@ -18,6 +19,9 @@ export default function Menu() {
   }, [])
 
   const handleButtonClick = (id: string) => {
+    // Vibrate device when menu button is clicked
+    vibrateDevice(42)
+
     setActiveButton(id)
     // Reset after animation completes
     setTimeout(() => setActiveButton(null), 400)
