@@ -389,8 +389,39 @@ export default function VideoShowcase() {
   const getMainVideoMaxWidth = () => {
     if (isSmallMobile) return "95vw"
     if (isMobile) return "90vw"
-    return "405px" // Default max width for desktop
+    return "405px" // Default max width for desktop (same as 9:16 aspect ratio at full height)
   }
+
+  // Add this function to ensure videos maintain proper aspect ratio
+  // Add this after the getMainVideoMaxWidth function
+
+  // Function to ensure proper video display
+  const ensureProperVideoDisplay = () => {
+    // This function will be called on component mount to fix any aspect ratio issues
+  }
+
+  useEffect(() => {
+    // Fix for main video
+    if (mainVideoRef.current) {
+      mainVideoRef.current.style.objectFit = "cover"
+      mainVideoRef.current.style.objectPosition = "center"
+      mainVideoRef.current.style.width = "100%"
+      mainVideoRef.current.style.height = "100%"
+    }
+
+    // Fix for thumbnail videos
+    thumbnailRefs.current.forEach((ref) => {
+      if (ref) {
+        ref.style.objectFit = "cover"
+        ref.style.objectPosition = "center"
+        ref.style.width = "100%"
+        ref.style.height = "100%"
+      }
+    })
+  }, [])
+
+  // Call the function
+  ensureProperVideoDisplay()
 
   return (
     <section id="showcase" ref={sectionRef} className="py-12 sm:py-20 overflow-hidden">
@@ -417,7 +448,10 @@ export default function VideoShowcase() {
           >
             <div className="apple-blur-heavy rounded-3xl border border-zinc-800/30 overflow-hidden apple-glow">
               <div className="p-0 relative">
-                <div className="aspect-[9/16] w-full mx-auto" style={{ maxWidth: getMainVideoMaxWidth() }}>
+                <div
+                  className="aspect-[9/16] w-full mx-auto overflow-hidden"
+                  style={{ maxWidth: getMainVideoMaxWidth() }}
+                >
                   <motion.video
                     ref={mainVideoRef}
                     className="w-full h-full object-cover"
@@ -457,6 +491,7 @@ export default function VideoShowcase() {
                     onPlaying={() => {
                       setMainVideoState((prev) => ({ ...prev, isBuffering: false }))
                     }}
+                    style={{ objectFit: "cover", objectPosition: "center" }}
                   >
                     <source src={videos[0].src} type="video/mp4" />
                     Your browser does not support the video tag.
@@ -506,7 +541,7 @@ export default function VideoShowcase() {
               >
                 <div className="apple-blur rounded-3xl border border-zinc-800/30 overflow-hidden apple-glow">
                   <div className="p-0">
-                    <div className="relative aspect-[9/16] bg-zinc-800">
+                    <div className="relative aspect-[9/16] bg-zinc-800 overflow-hidden">
                       <motion.video
                         ref={(el) => (thumbnailRefs.current[index] = el)}
                         className="w-full h-full object-cover"
@@ -518,6 +553,7 @@ export default function VideoShowcase() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.5 }}
+                        style={{ objectFit: "cover", objectPosition: "center" }}
                         onPlay={() => {
                           // Pause all other videos when this one plays
                           pauseAllVideosExcept(index)
