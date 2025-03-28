@@ -8,6 +8,7 @@ import { Play, Pause, Volume2, VolumeX } from "lucide-react"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import VideoTimeline from "./video-timeline"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { vibrateDevice } from "@/lib/vibration"
 
 // Video controls component with timeline
 const VideoControls = ({
@@ -43,7 +44,10 @@ const VideoControls = ({
         <Button
           variant="ghost"
           size={isMobile ? "sm" : "icon"}
-          onClick={onPlayPause}
+          onClick={(e) => {
+            vibrateDevice(42) // Vibrate for 42ms
+            onPlayPause(e)
+          }}
           className="text-white hover:bg-transparent focus:bg-transparent relative z-10 h-10 w-10 sm:h-12 sm:w-12 min-h-[40px] min-w-[40px] sm:min-h-[48px] sm:min-w-[48px]"
           disabled={isBuffering}
         >
@@ -103,7 +107,10 @@ const VideoControls = ({
         <Button
           variant="ghost"
           size={isMobile ? "sm" : "icon"}
-          onClick={onMuteToggle}
+          onClick={(e) => {
+            vibrateDevice(42) // Vibrate for 42ms
+            onMuteToggle(e)
+          }}
           className="text-white hover:bg-transparent focus:bg-transparent relative z-10 h-10 w-10 sm:h-12 sm:w-12 min-h-[40px] min-w-[40px] sm:min-h-[48px] sm:min-w-[48px]"
         >
           <div className="absolute inset-0 bg-black/30 backdrop-blur-xl rounded-full -z-10"></div>
@@ -154,9 +161,6 @@ export default function VideoShowcase() {
     { isPlaying: false, isMuted: false, currentTime: 0, duration: 0, isBuffering: false },
     { isPlaying: false, isMuted: false, currentTime: 0, duration: 0, isBuffering: false },
   ])
-
-  // Keep track of which video source is currently loaded in the main player
-  const [currentVideoSource, setCurrentVideoSource] = useState(0)
 
   const sectionRef = useRef<HTMLElement>(null)
   const mainVideoRef = useRef<HTMLVideoElement>(null)
@@ -235,16 +239,6 @@ export default function VideoShowcase() {
     }
   }, [])
 
-  // Effect to update only the main video source when currentVideoSource changes
-  useEffect(() => {
-    if (mainVideoRef.current) {
-      // Only update the video source, NOT the poster
-      mainVideoRef.current.src = videos[currentVideoSource].src
-      // Load the new video
-      mainVideoRef.current.load()
-    }
-  }, [currentVideoSource])
-
   // Load video metadata on component mount
   useEffect(() => {
     // Set initial muted state for main video
@@ -272,17 +266,17 @@ export default function VideoShowcase() {
   const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0])
   const y = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [100, 0, 0, -100])
 
-  // Function to pause all videos
-  const pauseAllVideos = () => {
-    // Pause main video
-    if (mainVideoRef.current && !mainVideoRef.current.paused) {
+  // Function to pause all videos except the one specified
+  const pauseAllVideosExcept = (exceptIndex: number | null = null) => {
+    // Pause main video if it's not the excepted one
+    if (exceptIndex !== -1 && mainVideoRef.current && !mainVideoRef.current.paused) {
       mainVideoRef.current.pause()
       setMainVideoState((prev) => ({ ...prev, isPlaying: false }))
     }
 
-    // Pause all thumbnail videos
+    // Pause all thumbnail videos except the specified one
     thumbnailRefs.current.forEach((videoRef, index) => {
-      if (videoRef && !videoRef.paused) {
+      if (index !== exceptIndex && videoRef && !videoRef.paused) {
         videoRef.pause()
         setThumbnailStates((prev) => {
           const newStates = [...prev]
@@ -301,7 +295,7 @@ export default function VideoShowcase() {
 
     if (mainVideoRef.current.paused) {
       // Pause all other videos first
-      pauseAllVideos()
+      pauseAllVideosExcept(-1) // -1 indicates main video
 
       // Set buffering state
       setMainVideoState((prev) => ({ ...prev, isBuffering: true }))
@@ -340,7 +334,7 @@ export default function VideoShowcase() {
 
     if (videoRef.paused) {
       // Pause all other videos first
-      pauseAllVideos()
+      pauseAllVideosExcept(index)
 
       // Set buffering state
       setThumbnailStates((prev) => {
@@ -391,15 +385,6 @@ export default function VideoShowcase() {
     })
   }
 
-  // Change the main video source only, not the poster
-  const changeMainVideo = (index: number) => {
-    // Pause all videos first
-    pauseAllVideos()
-
-    // Update only the source of the main video, not the poster
-    setCurrentVideoSource(index + 1) // +1 because thumbnails start at index 1
-  }
-
   // Calculate the max width for the main video based on aspect ratio
   const getMainVideoMaxWidth = () => {
     if (isSmallMobile) return "95vw"
@@ -445,17 +430,7 @@ export default function VideoShowcase() {
                     transition={{ duration: 0.5 }}
                     onPlay={() => {
                       // Pause all other videos when this one plays
-                      thumbnailRefs.current.forEach((videoRef, index) => {
-                        if (videoRef && !videoRef.paused) {
-                          videoRef.pause()
-                          setThumbnailStates((prev) => {
-                            const newStates = [...prev]
-                            newStates[index] = { ...newStates[index], isPlaying: false }
-                            return newStates
-                          })
-                        }
-                      })
-
+                      pauseAllVideosExcept(-1)
                       setMainVideoState((prev) => ({ ...prev, isPlaying: true }))
                     }}
                     onPause={() => setMainVideoState((prev) => ({ ...prev, isPlaying: false }))}
@@ -483,7 +458,7 @@ export default function VideoShowcase() {
                       setMainVideoState((prev) => ({ ...prev, isBuffering: false }))
                     }}
                   >
-                    <source src={videos[currentVideoSource].src} type="video/mp4" />
+                    <source src={videos[0].src} type="video/mp4" />
                     Your browser does not support the video tag.
                   </motion.video>
                 </div>
@@ -528,8 +503,6 @@ export default function VideoShowcase() {
                   transition: { duration: 0.3 },
                 }}
                 style={{ isolation: "isolate" }}
-                className="cursor-pointer"
-                onClick={() => changeMainVideo(index)}
               >
                 <div className="apple-blur rounded-3xl border border-zinc-800/30 overflow-hidden apple-glow">
                   <div className="p-0">
@@ -546,24 +519,8 @@ export default function VideoShowcase() {
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.5 }}
                         onPlay={() => {
-                          // Pause main video when this one plays
-                          if (mainVideoRef.current && !mainVideoRef.current.paused) {
-                            mainVideoRef.current.pause()
-                            setMainVideoState((prev) => ({ ...prev, isPlaying: false }))
-                          }
-
-                          // Pause other thumbnail videos
-                          thumbnailRefs.current.forEach((videoRef, i) => {
-                            if (i !== index && videoRef && !videoRef.paused) {
-                              videoRef.pause()
-                              setThumbnailStates((prev) => {
-                                const newStates = [...prev]
-                                newStates[i] = { ...newStates[i], isPlaying: false }
-                                return newStates
-                              })
-                            }
-                          })
-
+                          // Pause all other videos when this one plays
+                          pauseAllVideosExcept(index)
                           setThumbnailStates((prev) => {
                             const newStates = [...prev]
                             newStates[index] = { ...newStates[index], isPlaying: true }
