@@ -56,10 +56,10 @@ const VideoControls = ({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className="loading-animation-container relative"
+                className="loading-animation-circle"
               >
-                {/* Enhanced blurred background for loading animation */}
-                <div className="absolute inset-0 bg-black/50 backdrop-blur-xl rounded-full -z-10 loading-blur-background"></div>
+                <div className="loading-circle-backdrop"></div>
+                {/* Single SVG circle with no inner circle */}
                 <svg className={`${isMobile ? "w-5 h-5" : "w-6 h-6"} relative z-10`} viewBox="0 0 50 50">
                   <circle
                     cx="25"
@@ -233,6 +233,18 @@ export default function VideoShowcase() {
     }
   }, [])
 
+  // Effect to update the main video source when activeVideoIndex changes
+  useEffect(() => {
+    if (mainVideoRef.current) {
+      // Update the video source
+      mainVideoRef.current.src = videos[activeVideoIndex].src
+      // Update the poster
+      mainVideoRef.current.poster = videos[activeVideoIndex].poster
+      // Load the new video
+      mainVideoRef.current.load()
+    }
+  }, [activeVideoIndex])
+
   // Load video metadata on component mount
   useEffect(() => {
     // Set initial muted state for main video
@@ -385,10 +397,7 @@ export default function VideoShowcase() {
     pauseAllVideos()
 
     // Update the source of the main video
-    if (mainVideoRef.current) {
-      // Set the new video source
-      setActiveVideoIndex(index + 1) // +1 because thumbnails start at index 1
-    }
+    setActiveVideoIndex(index + 1) // +1 because thumbnails start at index 1
   }
 
   // Calculate the max width for the main video based on aspect ratio
@@ -605,7 +614,8 @@ export default function VideoShowcase() {
                         onPlaying={() => {
                           setThumbnailStates((prev) => {
                             const newStates = [...prev]
-                            newStates[index] = { ...newStates[index], isBuffering: false }
+                            const newstates = { ...newStates[index], isBuffering: false }
+                            newStates[index] = newstates
                             return newStates
                           })
                         }}
