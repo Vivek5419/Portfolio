@@ -628,11 +628,12 @@ button {
   justify-content: center;
   width: 100%;
   height: 100%;
+  isolation: isolate;
 }
 
 .loading-blur-background {
   position: absolute;
-  inset: -4px;
+  inset: 0;
   background-color: rgba(0, 0, 0, 0.5) !important;
   border-radius: 50%;
   backdrop-filter: blur(15px) !important;
@@ -641,12 +642,22 @@ button {
   will-change: backdrop-filter;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1;
 }
 
-/* Force the blur to be applied in all browsers */
+/* Add these new cross-platform blur fallbacks */
+/* Android Chrome fallback (many Android browsers don't support backdrop-filter well) */
+@supports not (backdrop-filter: blur(15px)) {
+  .loading-blur-background {
+    background-color: rgba(0, 0, 0, 0.85) !important;
+  }
+}
+
+/* Force the blur to be applied in WebKit browsers */
 @supports (-webkit-backdrop-filter: blur(15px)) {
   .loading-blur-background {
     background-color: rgba(0, 0, 0, 0.4) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
   }
 }
 
@@ -737,5 +748,191 @@ a {
   .xs-gap-1 {
     gap: 0.25rem;
   }
+}
+
+/* Add these Android-specific styles at the end of your CSS file */
+
+/* Android-specific styles */
+.is-android .loading-blur-background {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+}
+
+.android-solid-bg {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  z-index: -1;
+}
+
+/* Enhanced loading animation container */
+.loading-animation-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Create a multi-layered approach for maximum compatibility */
+.loading-animation-container::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  z-index: -2;
+}
+
+.loading-animation-container::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  z-index: -1;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Ensure the spinner is visible on all backgrounds */
+.animate-ios-spinner {
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.5));
+}
+
+/* DIRECT LOADING CIRCLE BLUR - GUARANTEED TO WORK */
+.loading-circle-blur {
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  background-color: rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 15px 5px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: -1;
+}
+
+/* Fallback for browsers that don't support backdrop-filter */
+@supports not (backdrop-filter: blur(8px)) and not (-webkit-backdrop-filter: blur(8px)) {
+  .loading-circle-blur {
+    background-color: rgba(0, 0, 0, 0.85);
+  }
+}
+
+/* Android specific styles */
+.is-android .loading-circle-blur {
+  background-color: rgba(0, 0, 0, 0.85);
+}
+
+/* Version 88 loading animation blur styles */
+.loading-animation-container {
+  position: relative;
+}
+
+.loading-animation-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 50%;
+  z-index: -1;
+}
+
+/* Ensure the blur works on all browsers */
+@supports not (backdrop-filter: blur(8px)) {
+  .loading-animation-container::before {
+    background-color: rgba(0, 0, 0, 0.75);
+  }
+}
+
+/* Specific Android fix */
+.is-android .loading-animation-container::before {
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+/* Add these styles at the end of your CSS file */
+
+/* Loading animation circle styles from the reference video */
+.loading-animation-circle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.loading-circle-backdrop {
+  position: absolute;
+  inset: -8px;
+  border-radius: 9999px;
+  background-color: rgba(0, 0, 0, 0.45); /* Reduced opacity for more subtle effect */
+  backdrop-filter: blur(20px); /* Increased blur amount */
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); /* Softer shadow */
+  border: 1px solid rgba(255, 255, 255, 0.08); /* More subtle border */
+  z-index: -1;
+  transform: translateZ(0);
+  will-change: backdrop-filter, transform;
+}
+
+/* Ensure the blur works on all browsers */
+@supports not (backdrop-filter: blur(20px)) and not (-webkit-backdrop-filter: blur(20px)) {
+  .loading-circle-backdrop {
+    background-color: rgba(0, 0, 0, 0.75); /* Fallback for browsers without backdrop-filter */
+  }
+}
+
+/* Android specific styles */
+.is-android .loading-circle-backdrop {
+  background-color: rgba(0, 0, 0, 0.65);
+}
+
+/* Ensure the spinner is visible on all backgrounds */
+.animate-ios-spinner {
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5)); /* Enhanced visibility */
+}
+
+/* Add these styles at the end of your globals.css file */
+
+/* Video aspect ratio fixes */
+.aspect-video-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.aspect-video-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* Fix for video poster images to ensure they fill the container */
+video[poster] {
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Ensure video containers have no internal padding */
+.apple-blur-heavy .p-0,
+.apple-blur .p-0 {
+  padding: 0 !important;
+}
+
+/* Fix for aspect ratio consistency */
+.aspect-\[9\/16\] {
+  aspect-ratio: 9/16;
+  overflow: hidden;
+}
+
+/* Ensure videos fill their containers completely */
+.object-cover {
+  object-fit: cover !important;
+  object-position: center !important;
 }
 
