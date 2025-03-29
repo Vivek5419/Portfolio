@@ -63,7 +63,7 @@ const VideoControls = ({
                 className="loading-animation-circle"
               >
                 <div className="loading-circle-backdrop"></div>
-                {/* Single SVG circle with no inner circle */}
+                {/* Single circle with no inner circle */}
                 <svg className={`${isMobile ? "w-5 h-5" : "w-6 h-6"} relative z-10`} viewBox="0 0 50 50">
                   <circle
                     cx="25"
@@ -258,6 +258,36 @@ export default function VideoShowcase() {
     })
   }, [])
 
+  // Fix aspect ratio issues
+  useEffect(() => {
+    // Fix for main video
+    if (mainVideoRef.current) {
+      mainVideoRef.current.style.objectFit = "cover"
+      mainVideoRef.current.style.objectPosition = "center"
+      mainVideoRef.current.style.width = "100%"
+      mainVideoRef.current.style.height = "100%"
+
+      // Force poster to fill container
+      const mainVideoContainer = mainVideoRef.current.parentElement
+      if (mainVideoContainer) {
+        mainVideoContainer.style.overflow = "hidden"
+        mainVideoContainer.style.display = "flex"
+        mainVideoContainer.style.alignItems = "center"
+        mainVideoContainer.style.justifyContent = "center"
+      }
+    }
+
+    // Fix for thumbnail videos
+    thumbnailRefs.current.forEach((ref) => {
+      if (ref) {
+        ref.style.objectFit = "cover"
+        ref.style.objectPosition = "center"
+        ref.style.width = "100%"
+        ref.style.height = "100%"
+      }
+    })
+  }, [])
+
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start end", "end start"],
@@ -307,7 +337,6 @@ export default function VideoShowcase() {
           setMainVideoState((prev) => ({ ...prev, isPlaying: true, isBuffering: false }))
         })
         .catch((err) => {
-          console.error("Error playing main video:", err)
           setMainVideoState((prev) => ({ ...prev, isBuffering: false }))
         })
     } else {
@@ -353,8 +382,7 @@ export default function VideoShowcase() {
             return newStates
           })
         })
-        .catch((err) => {
-          console.error(`Error playing thumbnail video ${index}:`, err)
+        .catch(() => {
           setThumbnailStates((prev) => {
             const newStates = [...prev]
             newStates[index] = { ...newStates[index], isBuffering: false }
@@ -392,37 +420,6 @@ export default function VideoShowcase() {
     return "405px" // Default max width for desktop (same as 9:16 aspect ratio at full height)
   }
 
-  // Add this function to ensure videos maintain proper aspect ratio
-  // Add this after the getMainVideoMaxWidth function
-
-  // Function to ensure proper video display
-  const ensureProperVideoDisplay = () => {
-    // This function will be called on component mount to fix any aspect ratio issues
-  }
-
-  useEffect(() => {
-    // Fix for main video
-    if (mainVideoRef.current) {
-      mainVideoRef.current.style.objectFit = "cover"
-      mainVideoRef.current.style.objectPosition = "center"
-      mainVideoRef.current.style.width = "100%"
-      mainVideoRef.current.style.height = "100%"
-    }
-
-    // Fix for thumbnail videos
-    thumbnailRefs.current.forEach((ref) => {
-      if (ref) {
-        ref.style.objectFit = "cover"
-        ref.style.objectPosition = "center"
-        ref.style.width = "100%"
-        ref.style.height = "100%"
-      }
-    })
-  }, [])
-
-  // Call the function
-  ensureProperVideoDisplay()
-
   return (
     <section id="showcase" ref={sectionRef} className="py-12 sm:py-20 overflow-hidden">
       <motion.div className="container px-2 sm:px-4 md:px-6" style={{ opacity, y }}>
@@ -449,7 +446,7 @@ export default function VideoShowcase() {
             <div className="apple-blur-heavy rounded-3xl border border-zinc-800/30 overflow-hidden apple-glow">
               <div className="p-0 relative">
                 <div
-                  className="aspect-[9/16] w-full mx-auto overflow-hidden"
+                  className="aspect-[9/16] w-full mx-auto overflow-hidden flex items-center justify-center"
                   style={{ maxWidth: getMainVideoMaxWidth() }}
                 >
                   <motion.video
@@ -541,7 +538,7 @@ export default function VideoShowcase() {
               >
                 <div className="apple-blur rounded-3xl border border-zinc-800/30 overflow-hidden apple-glow">
                   <div className="p-0">
-                    <div className="relative aspect-[9/16] bg-zinc-800 overflow-hidden">
+                    <div className="relative aspect-[9/16] bg-zinc-800 overflow-hidden flex items-center justify-center">
                       <motion.video
                         ref={(el) => (thumbnailRefs.current[index] = el)}
                         className="w-full h-full object-cover"
