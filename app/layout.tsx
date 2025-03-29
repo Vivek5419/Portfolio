@@ -176,11 +176,6 @@ export default function RootLayout({
 
         {/* Script to ensure thumbnails are visible */}
         <Script src="/ensure-thumbnails.js" strategy="beforeInteractive" />
-      </body>
-    </html>
-  )
-}
-
 import { Analytics } from '@vercel/analytics/next';
  
 export default function RootLayout({
