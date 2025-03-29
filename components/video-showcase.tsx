@@ -10,7 +10,7 @@ import VideoTimeline from "./video-timeline"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { vibrateDevice } from "@/lib/vibration"
 
-// Replace the VideoControls component with this simplified version that has NO inner circle
+// Video controls component with timeline
 const VideoControls = ({
   isPlaying,
   isMuted,
@@ -60,9 +60,11 @@ const VideoControls = ({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                className="loading-animation-circle"
               >
-                {/* COMPLETELY SIMPLIFIED LOADING SPINNER - JUST ONE CIRCLE */}
-                <svg className={`${isMobile ? "w-5 h-5" : "w-6 h-6"}`} viewBox="0 0 50 50">
+                <div className="loading-circle-backdrop"></div>
+                {/* Single SVG circle with no inner circle */}
+                <svg className={`${isMobile ? "w-5 h-5" : "w-6 h-6"} relative z-10`} viewBox="0 0 50 50">
                   <circle
                     cx="25"
                     cy="25"
@@ -74,7 +76,7 @@ const VideoControls = ({
                     strokeDasharray="90,150"
                     strokeDashoffset="0"
                     className="animate-ios-spinner"
-                  />
+                  ></circle>
                 </svg>
               </motion.div>
             ) : isPlaying ? (
@@ -109,7 +111,7 @@ const VideoControls = ({
             vibrateDevice(42) // Vibrate for 42ms
             onMuteToggle(e)
           }}
-          className="text-white hover:bg-transparent focus:bg-transparent relative z-10 h-10 w-10 sm:h-12 sm:w-12 min-h-[40px] min-w-[40px] sm:min-w-[48px]"
+          className="text-white hover:bg-transparent focus:bg-transparent relative z-10 h-10 w-10 sm:h-12 sm:w-12 min-h-[40px] min-w-[40px] sm:min-h-[48px] sm:min-w-[48px]"
         >
           <div className="absolute inset-0 bg-black/30 backdrop-blur-xl rounded-full -z-10"></div>
 
@@ -256,36 +258,6 @@ export default function VideoShowcase() {
     })
   }, [])
 
-  // Fix aspect ratio issues
-  useEffect(() => {
-    // Fix for main video
-    if (mainVideoRef.current) {
-      mainVideoRef.current.style.objectFit = "cover"
-      mainVideoRef.current.style.objectPosition = "center"
-      mainVideoRef.current.style.width = "100%"
-      mainVideoRef.current.style.height = "100%"
-
-      // Force poster to fill container
-      const mainVideoContainer = mainVideoRef.current.parentElement
-      if (mainVideoContainer) {
-        mainVideoContainer.style.overflow = "hidden"
-        mainVideoContainer.style.display = "flex"
-        mainVideoContainer.style.alignItems = "center"
-        mainVideoContainer.style.justifyContent = "center"
-      }
-    }
-
-    // Fix for thumbnail videos
-    thumbnailRefs.current.forEach((ref) => {
-      if (ref) {
-        ref.style.objectFit = "cover"
-        ref.style.objectPosition = "center"
-        ref.style.width = "100%"
-        ref.style.height = "100%"
-      }
-    })
-  }, [])
-
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start end", "end start"],
@@ -335,6 +307,7 @@ export default function VideoShowcase() {
           setMainVideoState((prev) => ({ ...prev, isPlaying: true, isBuffering: false }))
         })
         .catch((err) => {
+          console.error("Error playing main video:", err)
           setMainVideoState((prev) => ({ ...prev, isBuffering: false }))
         })
     } else {
@@ -380,7 +353,8 @@ export default function VideoShowcase() {
             return newStates
           })
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error(`Error playing thumbnail video ${index}:`, err)
           setThumbnailStates((prev) => {
             const newStates = [...prev]
             newStates[index] = { ...newStates[index], isBuffering: false }
@@ -415,7 +389,7 @@ export default function VideoShowcase() {
   const getMainVideoMaxWidth = () => {
     if (isSmallMobile) return "95vw"
     if (isMobile) return "90vw"
-    return "405px" // Default max width for desktop (same as 9:16 aspect ratio at full height)
+    return "405px" // Default max width for desktop
   }
 
   return (
@@ -443,14 +417,11 @@ export default function VideoShowcase() {
           >
             <div className="apple-blur-heavy rounded-3xl border border-zinc-800/30 overflow-hidden apple-glow">
               <div className="p-0 relative">
-                <div
-                  className="aspect-[9/16] w-full mx-auto overflow-hidden"
-                  style={{ maxWidth: getMainVideoMaxWidth() }}
-                >
+                <div className="aspect-[9/16] w-full mx-auto" style={{ maxWidth: getMainVideoMaxWidth() }}>
                   <motion.video
                     ref={mainVideoRef}
-                    className="w-full h-full object-cover scale-110" // Added scale-110 to zoom in by 10%
-                    poster={videos[0].poster}
+                    className="w-full h-full object-cover"
+                    poster={videos[0].poster} // Always use the first video's poster
                     muted={mainVideoState.isMuted}
                     playsInline
                     preload="auto"
@@ -458,6 +429,7 @@ export default function VideoShowcase() {
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5 }}
                     onPlay={() => {
+                      // Pause all other videos when this one plays
                       pauseAllVideosExcept(-1)
                       setMainVideoState((prev) => ({ ...prev, isPlaying: true }))
                     }}
@@ -484,11 +456,6 @@ export default function VideoShowcase() {
                     }}
                     onPlaying={() => {
                       setMainVideoState((prev) => ({ ...prev, isBuffering: false }))
-                    }}
-                    style={{
-                      objectFit: "cover",
-                      objectPosition: "center",
-                      transform: "scale(1.1)", // Additional transform to ensure scaling works
                     }}
                   >
                     <source src={videos[0].src} type="video/mp4" />
@@ -539,10 +506,10 @@ export default function VideoShowcase() {
               >
                 <div className="apple-blur rounded-3xl border border-zinc-800/30 overflow-hidden apple-glow">
                   <div className="p-0">
-                    <div className="relative aspect-[9/16] bg-zinc-800 overflow-hidden flex items-center justify-center">
+                    <div className="relative aspect-[9/16] bg-zinc-800">
                       <motion.video
                         ref={(el) => (thumbnailRefs.current[index] = el)}
-                        className="w-full h-full object-cover scale-110"
+                        className="w-full h-full object-cover"
                         src={video.src}
                         poster={video.poster}
                         muted={thumbnailStates[index].isMuted}
@@ -551,7 +518,6 @@ export default function VideoShowcase() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.5 }}
-                        style={{ objectFit: "cover", objectPosition: "center", transform: "scale(1.1)" }}
                         onPlay={() => {
                           // Pause all other videos when this one plays
                           pauseAllVideosExcept(index)
