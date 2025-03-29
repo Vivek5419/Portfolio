@@ -176,21 +176,6 @@ export default function RootLayout({
 
         {/* Script to ensure thumbnails are visible */}
         <Script src="/ensure-thumbnails.js" strategy="beforeInteractive" />
-import { Analytics } from '@vercel/analytics/next';
- 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <head>
-        <title>Next.js</title>
-      </head>
-      <body>
-        {children}
-        <Analytics />
       </body>
     </html>
   );
