@@ -242,7 +242,7 @@ button {
   }
 }
 
-/* Firefox fallback (since it doesn't support backdrop-filter well) */
+/* Firefox fallback (since it doesn't support backdrop-filter well) */ \
 @-moz-document url-prefix() {
   .apple-blur-light {
     background-color: rgba(10, 10, 10, 0.9) !important;
@@ -300,7 +300,7 @@ button {
 .thumbnail-container [class*="apple-blur"],
 .pricing-card-container [class*="apple-blur"],
 .contact-card-container [class*="apple-blur"],
-.inquiry-card-container [class*="apple-blur"] {
+.inquiry-card-container {
   will-change: backdrop-filter;
   transform: translateZ(0);
 }
@@ -885,7 +885,8 @@ a {
   }
 }
 
-/* Android specific styles */
+/* Android specific styles
+*/
 .is-android .loading-circle-backdrop {
   background-color: rgba(0, 0, 0, 0.65);
 }
@@ -934,5 +935,49 @@ video[poster] {
 .object-cover {
   object-fit: cover !important;
   object-position: center !important;
+}
+
+/* Add these styles at the end of your globals.css file */
+
+/* Fix for video aspect ratio and scaling */
+.scale-110 {
+  transform: scale(1.1) !important;
+}
+
+/* Ensure videos completely fill their containers with no gaps */
+video {
+  object-fit: cover !important;
+  object-position: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Fix for video poster images to ensure they fill the container */
+video[poster] {
+  background-size: cover !important;
+  background-position: center center !important;
+}
+
+/* Ensure video containers have proper dimensions */
+.aspect-\[9\/16\] {
+  position: relative !important;
+  padding-top: 177.78% !important; /* 16:9 aspect ratio (9/16 = 0.5625) */
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+.aspect-\[9\/16\] > * {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Remove any loading circle backdrop */
+.loading-circle-backdrop {
+  display: none !important;
 }
 
