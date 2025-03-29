@@ -23,8 +23,6 @@ export default function Home() {
       {/* Component to ensure videos have visible thumbnails */}
       <StaticVideoThumbnails />
     </main>
-  )
-}
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-HX53G7NGPX"></script>
 <script>
@@ -34,3 +32,10 @@ export default function Home() {
 
   gtag('config', 'G-HX53G7NGPX');
 </script>
+
+
+
+    
+  )
+}
+
