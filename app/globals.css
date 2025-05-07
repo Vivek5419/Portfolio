@@ -1,1 +1,938 @@
-h3ll
+html,
+body {
+  /*touch-action: pan-x pan-y;
+-webkit-touch-callout: none;
+-webkit-user-select: none;
+user-select: none;
+overscroll-behavior: none;*/
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  background-color: transparent;
+  /*touch-action: manipulation; Allow normal touch but prevent double-tap zoom*/
+  overscroll-behavior: none;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .card {
+    transition: all 500ms ease-in-out;
+  }
+
+  .card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400;
+  }
+
+  .bg-gradient-overlay {
+    @apply bg-gradient-to-br from-indigo-500/[0.05] via-transparent to-rose-500/[0.05];
+  }
+}
+
+/* Add smooth transitions for all interactive elements */
+a,
+button {
+  transition: all 300ms ease-in-out;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background: linear-gradient(270deg, #ff0000, #00ff00, #0000ff);
+  background-size: 600% 600%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient 10s ease infinite;
+}
+
+/* Menu container styles */
+.menu-container {
+  width: fit-content;
+  max-width: 95%;
+}
+
+/* Fix button padding to ensure borders stay within container */
+.menu-button {
+  border: none !important;
+  background: transparent !important;
+  transition: background-color 0.2s ease-in-out !important;
+  min-height: 40px !important;
+  min-width: 40px !important;
+  padding: 0.5rem 1rem !important;
+}
+
+.menu-button:active,
+.menu-button:focus {
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: none !important;
+}
+
+/* Add these styles to ensure consistent button widths */
+.hero-button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 24rem;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .hero-button-container {
+    flex-direction: row;
+    gap: 1.5rem;
+  }
+}
+
+.hero-button {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.75rem 1.5rem;
+}
+
+/* Make sure the animated background covers the entire page */
+.animated-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -10;
+  background-color: #030303;
+}
+
+/* Add a subtle overlay to ensure content remains readable */
+.section-overlay {
+  position: relative;
+  z-index: 1;
+}
+
+.section-overlay::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+}
+
+/* Enhanced Apple-style blur effects - MORE TRANSPARENT */
+.apple-blur {
+  background-color: rgba(18, 18, 18, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+  -webkit-backdrop-filter: blur(35px) !important;
+  backdrop-filter: blur(35px) !important;
+  transform: translateZ(0);
+  will-change: transform, backdrop-filter;
+}
+
+/* Fix for apple-blur-light to match the reference image */
+.apple-blur-light {
+  background-color: rgba(10, 10, 10, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+  -webkit-backdrop-filter: blur(15px) !important;
+  backdrop-filter: blur(15px) !important;
+  transform: translateZ(0);
+  will-change: transform, backdrop-filter;
+}
+
+/* Ensure the blur effect works in Safari */
+@media not all and (min-resolution: .001dpcm) {
+  @supports (-webkit-appearance: none) {
+    .apple-blur-light {
+      background-color: rgba(10, 10, 10, 0.9) !important;
+    }
+  }
+}
+
+/* Ensure the blur effect is applied correctly in all browsers */
+@supports (-webkit-backdrop-filter: blur(15px)) {
+  .apple-blur-light {
+    background-color: rgba(10, 10, 10, 0.85) !important;
+  }
+}
+
+/* Firefox fallback (since it doesn't support backdrop-filter well) */
+@-moz-document url-prefix() {
+  .apple-blur-light {
+    background-color: rgba(10, 10, 10, 0.9) !important;
+  }
+}
+
+.apple-blur-heavy {
+  background-color: rgba(18, 18, 18, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2) !important;
+  -webkit-backdrop-filter: blur(45px) !important;
+  backdrop-filter: blur(45px) !important;
+  transform: translateZ(0);
+  will-change: transform, backdrop-filter;
+}
+
+/* Update the menu container styles for better blur */
+.menu-container .menu-backdrop {
+  background-color: rgba(10, 10, 10, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+  -webkit-backdrop-filter: blur(40px) !important;
+  backdrop-filter: blur(40px) !important;
+  transform: translateZ(0);
+  will-change: transform, backdrop-filter;
+}
+
+/* Add styles for pre-animation blur state */
+.pre-animation-blur {
+  opacity: 0;
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  background-color: rgba(18, 18, 18, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transform: translateY(20px);
+  transition: all 0.5s ease-out;
+}
+
+/* Add this to ensure blur is applied to elements before they animate into view */
+.skill-card-container,
+.main-video-container,
+.thumbnail-container,
+.pricing-card-container,
+.contact-card-container,
+.inquiry-card-container {
+  will-change: opacity, transform;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* Ensure blur is applied even when elements are hidden */
+.skill-card-container [class*="apple-blur"],
+.main-video-container [class*="apple-blur"],
+.thumbnail-container [class*="apple-blur"],
+.pricing-card-container [class*="apple-blur"],
+.contact-card-container [class*="apple-blur"],
+.inquiry-card-container [class*="apple-blur"] {
+  will-change: backdrop-filter;
+  transform: translateZ(0);
+}
+
+/* Add this new class for enhanced glow effects */
+.apple-glow {
+  position: relative;
+}
+
+.apple-glow::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+  -webkit-mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Add this to ensure blur is applied to elements before they animate into view */
+.pre-animation-container {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Ensure blur is applied even when elements are hidden or during animation */
+.pre-animation-container [class*="apple-blur"] {
+  -webkit-backdrop-filter: blur(35px) !important;
+  backdrop-filter: blur(35px) !important;
+  will-change: transform, backdrop-filter;
+  transform: translateZ(0);
+}
+
+/* Force hardware acceleration for all animated elements */
+.motion-element {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* Enhanced timeline styles for better touch and hover interactions */
+.video-timeline-container {
+  position: relative;
+  width: 100%;
+  padding: 0.5rem 0;
+  cursor: pointer;
+}
+
+/* Larger touch target for mobile */
+@media (max-width: 768px) {
+  .video-timeline-container {
+    padding: 0.75rem 0;
+  }
+
+  .video-timeline-container::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 0;
+    right: 0;
+    bottom: -10px;
+    z-index: -1;
+  }
+}
+
+.video-timeline-track {
+  position: relative;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  transition: height 0.2s ease;
+}
+
+.video-timeline-track:hover {
+  height: 6px;
+}
+
+.video-timeline-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background-color: #ef4444;
+  border-radius: 2px;
+  transform-origin: left;
+  transition: transform 0.1s ease-out;
+}
+
+.video-timeline-handle {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.video-timeline-container:hover .video-timeline-handle,
+.video-timeline-container.dragging .video-timeline-handle {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.video-timeline-preview {
+  position: absolute;
+  top: -24px;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.video-timeline-container:hover .video-timeline-preview {
+  opacity: 1;
+}
+
+/* Dark glass morphism effect - specifically for "edited by me" section */
+.dark-glass-morphism {
+  background: rgba(0, 0, 0, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  backdrop-filter: blur(10px) !important;
+  transform: translateZ(0);
+  will-change: transform, backdrop-filter;
+}
+
+/* Enhanced blur effect for edited-by-me section */
+.edited-by-me-section {
+  background-color: rgba(18, 18, 18, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  -webkit-backdrop-filter: blur(35px);
+  backdrop-filter: blur(35px);
+  transform: translateZ(0);
+  will-change: transform, backdrop-filter;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  padding: 1rem;
+}
+
+/* Enhanced glass morphism effect */
+.glass-morphism {
+  background: rgba(0, 0, 0, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  transform: translateZ(0);
+  will-change: transform, backdrop-filter;
+}
+
+.glass-morphism::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Overlay track styles */
+.overlay-track {
+  position: absolute;
+  height: 4px;
+  border-radius: 2px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.overlay-track:hover {
+  opacity: 1 !important;
+  transform: scaleY(1.5);
+  z-index: 10;
+}
+
+.overlay-track-pip {
+  background-color: rgba(59, 130, 246, 0.7);
+}
+
+.overlay-track-overlay {
+  background-color: rgba(168, 85, 247, 0.7);
+}
+
+.overlay-track-text {
+  background-color: rgba(34, 197, 94, 0.7);
+}
+
+/* Enhanced tooltip for overlay information */
+.overlay-tooltip {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 20;
+  transform: translateX(-50%);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive adjustments for overlay tracks on mobile */
+@media (max-width: 640px) {
+  .overlay-track {
+    height: 3px;
+  }
+
+  .overlay-legend {
+    font-size: 10px;
+  }
+}
+
+/* Add these styles to the end of your globals.css file */
+
+/* Enhanced timeline styles for smoother animations */
+.video-timeline {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: height 0.2s ease-out;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.video-timeline:hover {
+  height: 6px;
+}
+
+.video-timeline-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+
+/* Video player animations */
+.video-player-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.video-player-container:hover {
+  transform: scale(1.02);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.video-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.video-player-container:hover .video-controls {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.control-button {
+  transition: transform 0.2s ease;
+}
+
+.control-button:hover {
+  transform: scale(1.1);
+}
+
+.control-button:active {
+  transform: scale(0.95);
+}
+
+/* iOS 18-style loading animation */
+@keyframes ios-spinner {
+  0% {
+    stroke-dasharray: 1, 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -35;
+  }
+  100% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -124;
+  }
+}
+
+.animate-ios-spinner {
+  animation: ios-spinner 1.3s cubic-bezier(0.42, 0, 0.58, 1) infinite;
+  transform-origin: center;
+}
+
+/* Enhanced loading animation blur styles */
+.loading-animation-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  isolation: isolate;
+}
+
+.loading-blur-background {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  border-radius: 50%;
+  backdrop-filter: blur(15px) !important;
+  -webkit-backdrop-filter: blur(15px) !important;
+  transform: translateZ(0);
+  will-change: backdrop-filter;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1;
+}
+
+/* Add these new cross-platform blur fallbacks */
+/* Android Chrome fallback (many Android browsers don't support backdrop-filter well) */
+@supports not (backdrop-filter: blur(15px)) {
+  .loading-blur-background {
+    background-color: rgba(0, 0, 0, 0.85) !important;
+  }
+}
+
+/* Force the blur to be applied in WebKit browsers */
+@supports (-webkit-backdrop-filter: blur(15px)) {
+  .loading-blur-background {
+    background-color: rgba(0, 0, 0, 0.4) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+  }
+}
+
+/* Firefox fallback */
+@-moz-document url-prefix() {
+  .loading-blur-background {
+    background-color: rgba(0, 0, 0, 0.7) !important;
+  }
+}
+
+/* Add these styles to ensure all interactive elements have sufficient touch targets */
+
+/* Ensure all buttons have sufficient touch targets */
+button,
+.button,
+[role="button"],
+a {
+  min-height: 40px;
+  min-width: 40px;
+}
+
+/* Ensure touch targets on mobile have sufficient spacing */
+@media (max-width: 768px) {
+  button,
+  .button,
+  [role="button"],
+  a {
+    margin: 0.25rem;
+    padding: 0.5rem;
+  }
+
+  /* Increase spacing between interactive elements */
+  .interactive-container > * {
+    margin: 0.5rem;
+  }
+}
+
+/* Ensure video controls have sufficient touch targets */
+.video-controls button {
+  min-height: 40px;
+  min-width: 40px;
+}
+
+/* Responsive container width adjustments */
+.container {
+  width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 360px) {
+  .xs-text-xs {
+    font-size: 0.75rem;
+  }
+
+  .xs-p-1 {
+    padding: 0.25rem;
+  }
+
+  .xs-gap-1 {
+    gap: 0.25rem;
+  }
+}
+
+/* Add these Android-specific styles at the end of your CSS file */
+
+/* Android-specific styles */
+.is-android .loading-blur-background {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+}
+
+.android-solid-bg {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  z-index: -1;
+}
+
+/* Enhanced loading animation container */
+.loading-animation-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Create a multi-layered approach for maximum compatibility */
+.loading-animation-container::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  z-index: -2;
+}
+
+.loading-animation-container::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  z-index: -1;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Ensure the spinner is visible on all backgrounds */
+.animate-ios-spinner {
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.5));
+}
+
+/* DIRECT LOADING CIRCLE BLUR - GUARANTEED TO WORK */
+.loading-circle-blur {
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  background-color: rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 15px 5px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: -1;
+}
+
+/* Fallback for browsers that don't support backdrop-filter */
+@supports not (backdrop-filter: blur(8px)) and not (-webkit-backdrop-filter: blur(8px)) {
+  .loading-circle-blur {
+    background-color: rgba(0, 0, 0, 0.85);
+  }
+}
+
+/* Android specific styles */
+.is-android .loading-circle-blur {
+  background-color: rgba(0, 0, 0, 0.85);
+}
+
+/* Version 88 loading animation blur styles */
+.loading-animation-container {
+  position: relative;
+}
+
+.loading-animation-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 50%;
+  z-index: -1;
+}
+
+/* Ensure the blur works on all browsers */
+@supports not (backdrop-filter: blur(8px)) {
+  .loading-animation-container::before {
+    background-color: rgba(0, 0, 0, 0.75);
+  }
+}
+
+/* Specific Android fix */
+.is-android .loading-animation-container::before {
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+/* Add these styles at the end of your CSS file */
+
+/* Loading animation circle styles from the reference video */
+.loading-animation-circle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.loading-circle-backdrop {
+  position: absolute;
+  inset: -8px;
+  border-radius: 9999px;
+  background-color: rgba(0, 0, 0, 0.45); /* Reduced opacity for more subtle effect */
+  backdrop-filter: blur(20px); /* Increased blur amount */
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); /* Softer shadow */
+  border: 1px solid rgba(255, 255, 255, 0.08); /* More subtle border */
+  z-index: -1;
+  transform: translateZ(0);
+  will-change: backdrop-filter, transform;
+}
+
+/* Ensure the blur works on all browsers */
+@supports not (backdrop-filter: blur(20px)) and not (-webkit-backdrop-filter: blur(20px)) {
+  .loading-circle-backdrop {
+    background-color: rgba(0, 0, 0, 0.75); /* Fallback for browsers without backdrop-filter */
+  }
+}
+
+/* Android specific styles */
+.is-android .loading-circle-backdrop {
+  background-color: rgba(0, 0, 0, 0.65);
+}
+
+/* Ensure the spinner is visible on all backgrounds */
+.animate-ios-spinner {
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5)); /* Enhanced visibility */
+}
+
+/* Add these styles at the end of your globals.css file */
+
+/* Video aspect ratio fixes */
+.aspect-video-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.aspect-video-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* Fix for video poster images to ensure they fill the container */
+video[poster] {
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Ensure video containers have no internal padding */
+.apple-blur-heavy .p-0,
+.apple-blur .p-0 {
+  padding: 0 !important;
+}
+
+/* Fix for aspect ratio consistency */
+.aspect-\[9\/16\] {
+  aspect-ratio: 9/16;
+  overflow: hidden;
+}
+
+/* Ensure videos fill their containers completely */
+.object-cover {
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
