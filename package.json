@@ -9,6 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@vercel/analytics": "^1.2.2",
     "@emotion/is-prop-valid": "latest",
     "@radix-ui/react-slot": "latest",
     "class-variance-authority": "^0.7.1",
