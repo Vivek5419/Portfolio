@@ -186,13 +186,13 @@ export default function VideoShowcase() {
       id: 2,
       title: "The Life-Changing Wallet",
       src: "/videos/short-sample-2.mp4",
-      poster: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/2.jpg-EGLISlFMzFbL39oHQUaEu5SrIbmTUl.jpeg",
+      poster: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot_20251128-224500-7w4OEU9t8TqLf3VdvRPUK1HnPQfvNZ.png",
     },
     {
       id: 3,
       title: "The one who called",
       src: "/videos/short-sample-3.mp4",
-      poster: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3.jpg-hbXOoSmYUIfMHKoSkphGeyEY4it3KZ.jpeg",
+      poster: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/New%20Project%209%20%5BB911BF5%5D-i24mXsQNGMOxbPyD1ispoazHcJfPkN.png",
     },
   ]
 
