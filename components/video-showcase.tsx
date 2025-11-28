@@ -190,7 +190,7 @@ export default function VideoShowcase() {
     },
     {
       id: 3,
-      title: "The Mirror's Secret",
+      title: "The one who called",
       src: "/videos/short-sample-3.mp4",
       poster: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3.jpg-hbXOoSmYUIfMHKoSkphGeyEY4it3KZ.jpeg",
     },
